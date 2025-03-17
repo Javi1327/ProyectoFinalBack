@@ -14,6 +14,7 @@ const AlumnoSchema = new mongoose.Schema({
     asistencia: [{ type: [Date], default: [] }],
     materias: [{
         materia: { type: mongoose.Schema.Types.ObjectId, ref: "Materia" },
+        //materia: { type: String },
         nota1: { type: Number, min: 0, max: 10 },
         nota2: { type: Number, min: 0, max: 10 },
         promedio: { type: Number }

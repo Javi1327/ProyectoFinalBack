@@ -32,7 +32,7 @@ export const postAlumnoController = async (req, res) => {
         const { nombre, apellido, dni, grado, direccion, telefono, correoElectronico, fechaNacimiento, asistencia, materias } = req.body;
 
         // Validar campos requeridos
-        if (!nombre || !apellido || !dni || !grado || !direccion || !telefono || !correoElectronico || !fechaNacimiento || !asistencia) {
+        if (!nombre || !apellido || !dni || !grado || !direccion || !telefono || !correoElectronico || !fechaNacimiento) {
             return res.status(400).json({ status: "error", menssage: "faltan datos", data: {} });
         }
 
@@ -54,9 +54,9 @@ export const putAlumnoController = async (req, res) => {
         const id = req.params.id;
         const {nombre, apellido, dni, grado, direccion, telefono, correoElectronico, fechaNacimiento, asistencia, materias} = req.body;
 
-        if (!nombre || !apellido || !dni || !grado || !direccion || !telefono || !correoElectronico || !fechaNacimiento  || !asistencia  || !materias) {
+      /*  if (!nombre || !apellido || !dni || !grado || !direccion || !telefono || !correoElectronico || !fechaNacimiento  || !asistencia  || !materias) {
             return res.status(400).json({status: "error", menssage: "faltan datos", data:{}});
-        }
+        }*/
 
         let alumno = await putAlumno(id, nombre, apellido, dni, grado, direccion, telefono, correoElectronico, fechaNacimiento, asistencia, materias);
 

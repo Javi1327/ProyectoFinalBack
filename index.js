@@ -7,6 +7,7 @@ import routerPreceptor from "./router/routerPreceptor.js"
 import routerProfesor from "./router/routerProfesor.js"
 import routerAlumno from "./router/routerAlumno.js"
 import routerMateria from "./router/routerMateria.js"
+import routerUsuario from "./router/routerUsuario.js"
 
 env.config()
 const PORT = process.env.PORT || 3000
@@ -26,6 +27,7 @@ app.use("/preceptor",routerPreceptor)
 app.use("/profesor", routerProfesor)
 app.use("/alumnos", routerAlumno)
 app.use("/materias", routerMateria)
+app.use("/auth", routerUsuario)
 
 app.use("/protected",authMiddleware, (req, res) => {
     res.json({ message: "Acceso permitido", user: req.user })
