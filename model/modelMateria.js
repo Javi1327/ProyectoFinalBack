@@ -1,13 +1,21 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-const MateriaSchema = new mongoose.Schema({
-    id: { type: String, required: true, unique: true},
-    isHabilitado: {type: Boolean, default: true},
-    nombreMateria: { type: String, required: true},
-},{
-    timestamps: true
+const materiaSchema = new mongoose.Schema({
+  nombreMateria: {
+    type: String,
+    required: true,
+  },
+  cursos: [{
+    type: String,
+    required: true,
+  }],
+  isHabilitado: {
+    type: Boolean,
+    default: true,
+  },
 });
- 
 
-const Materia = mongoose.model('Materia', MateriaSchema);
+const Materia = mongoose.model('Materia', materiaSchema);
+
 export default Materia;
+

@@ -1,91 +1,106 @@
-import { getMteria, getsMaterias, postMateria, putMateria, deleteMateria } from "../service/serviceMateria.js";
+import { getMateria, getsMaterias, postMateria, putMateria, deleteMateria } from "../service/serviceMateria.js";
 
+// Obtener todas las materias
+// Obtener todas las materias
 export const getsMateriasController = async (req, res) => {
     try {
-        const materias = await getsMaterias();
-        if(materias.length === 0){ 
-            return res.status(400).json({status: "error", menssage: "materias no encontrados", data:{}});
-        }
-        return res.status(200).json({status: "success", menssage: "materias obtenidos", data:materias});
+      const materias = await getsMaterias(); // Usamos el servicio para obtener las materias habilitadas
+      res.status(200).json(materias);
     } catch (error) {
-        return res.status(500).json({status: "error", menssage: "error en el servidor", data:{}});
+      console.error('Error al obtener las materias:', error);
+      res.status(500).json({ message: 'Error al obtener las materias' });
     }
-}
+  };
+  
 
-
+// Obtener una materia por ID
 export const getMateriaController = async (req, res) => {
     try {
         const id = req.params.id;
-        const materia = await getMteria(id);
-        if(!materia){
-            return res.status(400).json({status: "error", menssage: "materia no encontrado", data:{}});
+        const materia = await getMateria(id);
+        if (!materia) {
+            return res.status(400).json({ status: "error", message: "Materia no encontrada", data: {} });
         }
-        return res.status(200).json({status: "success", menssage: "materia obtenido", data:materia});
+        return res.status(200).json({ status: "success", message: "Materia obtenida", data: materia });
     } catch (error) {
-        return res.status(500).json({status: "error", menssage: "error en el servidor", data:{}});
+        console.error(error);
+        return res.status(500).json({ status: "error", message: "Error en el servidor", data: {} });
     }
-}
+};
 
+// Crear una nueva materia
 
 export const postMateriaController = async (req, res) => {
     try {
-        const {nombreMateria} = req.body;
-        
-        if (!nombreMateria) {
-            return res.status(400).json({status: "error", menssage: "faltan datos", data:{}});
-        }
-        
-        const materia = await postMateria(nombreMateria);
-        
-        if(materia){
-            return res.status(201).json({status: "success", menssage: "materia creado", data:materia});
-        }else{
-            return res.status(400).json({status: "error", menssage: "materia no creado", data:{}});
-        }
+        const { nombreMateria, cursos } = req.body;
 
+        // Llamamos al servicio para crear la materia sin validación de existencia
+        const materia = await postMateria(nombreMateria, cursos);
+
+        res.status(201).json({
+            status: "success",
+            message: "Materia creada",
+            data: materia
+        });
     } catch (error) {
-        console.log(error);
-        return res.status(500).json({status: "error", menssage: "error en el servidor", data:{}});
+        res.status(400).json({
+            status: "error",
+            message: error.message
+        });
     }
-}
+};
 
 
+// Actualizar una materia existente
 export const putMateriaController = async (req, res) => {
     try {
         const id = req.params.id;
-        const {nombreMateria} = req.body;
+        const { nombreMateria, cursos } = req.body; // CAMBIO AQUI: cursos (plural)
 
-        if (!nombreMateria) {
-            return res.status(400).json({status: "error", menssage: "faltan datos", data:{}});
+        if (!nombreMateria || !cursos || cursos.length === 0) {
+            return res.status(400).json({ status: "error", message: "Faltan datos", data: {} });
         }
 
-        let materia = await putMateria(id, nombreMateria);
+        let materia = await putMateria(id, nombreMateria, cursos);
 
         if (materia) {
-            materia = await getMteria(id);
-            return res.status(200).json({status: "success", menssage: "materia actualizado", data:materia});
+            materia = await getMateria(id); // Obtener la materia actualizada
+            return res.status(200).json({ status: "success", message: "Materia actualizada", data: materia });
         } else {
-            return res.status(400).json({status: "error", menssage: "materia no actualizado", data:{}});
+            return res.status(400).json({ status: "error", message: "Materia no actualizada", data: {} });
         }
     } catch (error) {
-        console.log(error);
-        return res.status(500).json({status: "error", menssage: "error en el servidor", data:{}});
+        console.error(error);
+        return res.status(500).json({ status: "error", message: "Error en el servidor", data: {} });
     }
-}
+};
 
 
 export const deleteMateriaController = async (req, res) => {
     try {
         const id = req.params.id;
-        let materia = await deleteMateria(id);
-        if (materia) {
-            materia = await getMteria(id);
-            return res.status(200).json({status: "success", menssage: "materia eliminado", data:materia});
-        }else{
-            return res.status(400).json({status: "error", menssage: "materia no eliminado", data:{}});
+        const materia = await deleteMateria(id);
+
+        // Si no se encuentra la materia, devuelve un mensaje de error
+        if (!materia) {
+            return res.status(404).json({
+                status: "error",
+                message: "Materia no encontrada o ya eliminada",
+                data: {}
+            });
         }
+
+        return res.status(200).json({
+            status: "success",
+            message: "Materia eliminada",
+            data: materia
+        });
     } catch (error) {
-        console.log(error);
-        return res.status(500).json({status: "error", menssage: "error en el servidor", data:{}});
+        console.error(error);
+        return res.status(500).json({
+            status: "error",
+            message: "Error al eliminar la materia",
+            data: {}
+        });
     }
-}
+};
