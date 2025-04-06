@@ -2,26 +2,49 @@ import Profesor from "../model/modelProfesor.js";
 import crypto from "crypto";
 
 export const getsProfesores = async () => {
-    const profesores = await Profesor.find({isHabilitado: true});
-    return profesores
-}
+    return await Profesor.find({ isHabilitado: true });
+};
 
 export const getProfesor = async (id) => {
-    const profesor = await Profesor.findOne({id:id});
-    return profesor
-}
+    return await Profesor.findOne({ id });
+};
 
-export const postProfesor = async (nombre,apellido,dni,correoElectronico,telefono,materias,cursos) => {
-    const profesor = await Profesor.create({id:crypto.randomUUID(),nombre,apellido,dni,correoElectronico,telefono,materias,cursos});
-    return profesor
-}
+export const postProfesor = async (nombre, apellido, dni, correoElectronico, telefono, materias, cursos) => {
+    const profesor = await Profesor.create({
+        id: crypto.randomUUID(),
+        nombre,
+        apellido,
+        dni,
+        correoElectronico,
+        telefono,
+        materias: Array.isArray(materias) ? materias : [], // Aseguramos que sea un array
+        cursos: Array.isArray(cursos) ? cursos : [], // Aseguramos que sea un array
+        isHabilitado: true,  // Siempre inicia habilitado
+    });
+    return profesor;
+};
 
-export const putProfesor = async (id,nombre,apellido,dni,correoElectronico,telefono,materias,cursos) => {
-    const profesor = await Profesor.findOneAndUpdate({id:id},{nombre,apellido,dni,correoElectronico,telefono,materias,cursos})
-    return profesor
-}
+export const putProfesor = async (id, nombre, apellido, dni, correoElectronico, telefono, materias, cursos) => {
+    return await Profesor.findOneAndUpdate(
+        { id },
+        { 
+            nombre, 
+            apellido, 
+            dni, 
+            correoElectronico, 
+            telefono, 
+            materias: Array.isArray(materias) ? materias : [], 
+            cursos: Array.isArray(cursos) ? cursos : [], 
+            isHabilitado: true // Mantenemos habilitado
+        },
+        { new: true } // Devuelve el documento actualizado
+    );
+};
 
 export const deleteProfesor = async (id) => {
-    const profesor = await Profesor.findOneAndUpdate({id:id},{isHabilitado:false});
-    return profesor
-}
+    return await Profesor.findOneAndUpdate(
+        { id },
+        { isHabilitado: false },
+        { new: true } // Devuelve el documento actualizado
+    );
+};

@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 
 const AlumnoSchema = new mongoose.Schema({
-    id: { type: String, required: true, unique:true },
     isHabilitado: {type: Boolean, default: true},
     nombre: { type: String, required: true },
     apellido: { type: String, required: true },

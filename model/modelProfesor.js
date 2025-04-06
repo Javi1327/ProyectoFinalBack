@@ -10,7 +10,9 @@ const ProfesorSchema = new mongoose.Schema({
     telefono: { type: Number },
     materias: [{ type: String }], // Lista de materias que enseña
     cursos: [{ type: String }], // Lista de cursos que enseña
-    fechaContratacion: { type: Date, default: new Date } // new Date() // Establece la fecha de contratación a la fecha actual
+    fechaContratacion: { type: Date,
+        default: Date.now,
+    },
 });
 
 const Profesor = mongoose.model('Profesor', ProfesorSchema);

@@ -7,7 +7,8 @@ import routerPreceptor from "./router/routerPreceptor.js";
 import routerProfesor from "./router/routerProfesor.js";
 import routerAlumno from "./router/routerAlumno.js";
 import routerMateria from "./router/routerMateria.js";
-import routerUsuario from "./router/routerUsuario.js";
+import routerAdmin from "./router/routerAdmin.js";
+
 
 env.config();
 
@@ -25,11 +26,11 @@ app.use(
 );
 
 // Rutas
-app.use("/preceptor", routerPreceptor);
-app.use("/profesor", routerProfesor);
+app.use("/preceptores", routerPreceptor);
+app.use("/profesores", routerProfesor);
 app.use("/alumnos", routerAlumno);
 app.use("/materias", routerMateria);
-app.use("/usuarios", routerUsuario);
+app.use("/admins", routerAdmin)
 
 // Ruta protegida con authMiddleware
 app.use("/protected", authMiddleware, (req, res) => {
