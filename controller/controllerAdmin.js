@@ -1,10 +1,22 @@
-import { 
-    getAdmin, 
-    getsAdmins, 
-    postAdmin, 
-    putAdmin, 
-    deleteAdmin 
-} from "../service/serviceAdmin.js";
+import {  getAdmin,  getsAdmins,  postAdmin, putAdmin,  deleteAdmin } from "../service/serviceAdmin.js";
+import Admin from "../model/modelAdmin.js";
+export const buscarAdmin = async (req, res) => {
+    const { dni, correoElectronico } = req.query;
+    try {
+      const query = {};
+      if (dni) query.dni = dni;
+      if (correoElectronico) query.correoElectronico = correoElectronico;
+  
+      const admin = await Admin.findOne(query);
+      if (!admin) {
+        return res.status(404).json({ mensaje: "Admin no encontrado" });
+      }
+  
+      res.json(admin);
+    } catch (error) {
+      res.status(500).json({ mensaje: "Error en el servidor" });
+    }
+  };
 
 export const getsAdminsController = async (req, res) => {
     try {

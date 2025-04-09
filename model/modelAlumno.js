@@ -11,7 +11,7 @@ const AlumnoSchema = new mongoose.Schema({
     correoElectronico: { type: String },
     fechaNacimiento: { type: Date },
     asistencia: [{ type: [Date], default: [] }],
-    materias: [{
+    materiasAlumno: [{
         materia: { type: mongoose.Schema.Types.ObjectId, ref: "Materia" },
         //materia: { type: String },
         nota1: { type: Number, min: 0, max: 10 },
@@ -24,7 +24,7 @@ const AlumnoSchema = new mongoose.Schema({
 
 // Pre-save hook to calculate the promedio for each materia
 AlumnoSchema.pre('save', function(next) {
-    this.materias.forEach(materia => {
+    this.materiasAlumno.forEach(materia => {
         if (materia.nota1 !== undefined && materia.nota2 !== undefined) {
             materia.promedio = (materia.nota1 + materia.nota2) / 2;
         }
