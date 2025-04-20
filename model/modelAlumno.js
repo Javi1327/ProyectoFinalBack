@@ -10,7 +10,7 @@ const AlumnoSchema = new mongoose.Schema({
     telefono: { type: String },
     correoElectronico: { type: String },
     fechaNacimiento: { type: Date },
-    asistencia: [{ type: [Date], default: [] }],
+    asistencia: [{ fecha: { type: Date }, presente: { type: Boolean } }],
     materias: [{
         materia: { type: mongoose.Schema.Types.ObjectId, ref: "Materia" },
         //materia: { type: String },

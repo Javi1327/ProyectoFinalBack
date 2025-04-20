@@ -64,6 +64,7 @@ export const putAlumnoController = async (req, res) => {
     }
 };
 
+
 export const deleteAlumnoController = async (req, res) => {
     try {
         const id = req.params.id;
@@ -76,6 +77,71 @@ export const deleteAlumnoController = async (req, res) => {
         }
     } catch (error) {
         console.error(error);
+        return res.status(500).json({ status: "error", message: "Error en el servidor", data: {} });
+    }
+};
+
+
+export const putAlumnoAsistController = async (req, res) => {
+    try {
+        const id = req.params.id;   
+        const { asistencia } = req.body; // Solo desestructuramos asistencia
+        console.log("Datos recibidos:", req.body);
+
+        // Aquí puedes obtener el alumno actual para no perder los demás datos
+        //console.log("ID del alumno a buscar:", id);
+        let alumno = await getAlumno(id);
+        //console.log("Alumno encontrado:", alumno);
+
+        if (!alumno) {
+            return res.status(404).json({ status: "error", message: "Alumno no encontrado", data: {} });
+        }
+
+        // Actualiza solo el campo de asistencia
+        if (asistencia && Array.isArray(asistencia)) {
+            asistencia.forEach(({ fecha, presente }) => {
+                if (!fecha) {
+                    console.error("Fecha no definida:", fecha);
+                    return; // Salta esta iteración si la fecha no está definida
+                }
+
+                const fechaFormateada = new Date(fecha);
+                if (isNaN(fechaFormateada.getTime())) {
+                    console.error("Fecha no válida:", fecha);
+                    return; // Salta esta iteración si la fecha no es válida
+                }
+
+                const fechaISO = fechaFormateada.toISOString().split("T")[0]; // Formato YYYY-MM-DD
+
+                // Verifica si ya existe la fecha en la asistencia
+                const index = alumno.asistencia.findIndex(item => item.fecha === fechaISO);
+                
+                if (presente) {
+                    // Si está presente, agrega o actualiza la fecha
+                    if (index === -1) {
+                        alumno.asistencia.push({ fecha: fechaISO, presente: true });
+                    } else {
+                        alumno.asistencia[index].presente = true; // Actualiza el estado a presente
+                    }
+                } else {
+                    // Si está ausente, elimina la fecha (si existe)
+                    if (index > -1) {
+                        alumno.asistencia.splice(index, 1); // Elimina la entrada de asistencia
+                    }
+                }
+            });
+        }
+
+        // Guarda el alumno actualizado
+        alumno = await putAlumno(id, alumno.nombre, alumno.apellido, alumno.dni, alumno.grado, alumno.direccion, alumno.telefono, alumno.correoElectronico, alumno.fechaNacimiento, alumno.asistencia, alumno.materias);
+        //console.log("Alumno actualizado:", alumno);
+        if (alumno) {
+            return res.status(200).json({ status: "success", message: "Asistencia actualizada", data: alumno });
+        } else {
+            return res.status(400).json({ status: "error", message: "Asistencia no actualizada", data: {} });
+        }
+    } catch (error) {
+        console.error("Error en el controlador:", error.message); // Imprime el mensaje de error
         return res.status(500).json({ status: "error", message: "Error en el servidor", data: {} });
     }
 };

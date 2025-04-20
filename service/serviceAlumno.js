@@ -6,7 +6,7 @@ export const getsAlumnos = async () => {
 };
 
 export const getAlumno = async (id) => {
-    return await Alumno.findOne({ id });
+    return await Alumno.findById(id);
 };
 
 export const postAlumno = async (nombre, apellido, dni, grado, direccion, telefono, correoElectronico, fechaNacimiento, asistencia, materias) => {
@@ -29,7 +29,7 @@ export const postAlumno = async (nombre, apellido, dni, grado, direccion, telefo
 
 export const putAlumno = async (id, nombre, apellido, dni, grado, direccion, telefono, correoElectronico, fechaNacimiento, asistencia, materias) => {
     return await Alumno.findOneAndUpdate(
-        { id },
+        { _id: id },
         { 
             nombre, 
             apellido, 
