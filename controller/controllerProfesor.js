@@ -1,4 +1,23 @@
 import { getProfesor, getsProfesores, postProfesor, putProfesor, deleteProfesor } from "../service/serviceProfesor.js";
+import Profesor from "../model/modelProfesor.js";
+
+export const buscarProfesor = async (req, res) => {
+  const { dni, correoElectronico } = req.query;
+  try {
+    const query = {};
+    if (dni) query.dni = dni;
+    if (correoElectronico) query.correoElectronico = correoElectronico;
+
+    const profesor = await Profesor.findOne(query);
+    if (!profesor) {
+      return res.status(404).json({ mensaje: "Profesor no encontrado" });
+    }
+
+    res.json(profesor);
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error en el servidor" });
+  }
+};
 
 export const getsProfesoresController = async (req, res) => {
     try {

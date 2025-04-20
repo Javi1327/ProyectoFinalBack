@@ -1,4 +1,23 @@
 import { getPreceptor, getsPreceptores, postPreceptor, putPreceptor, deletePreceptor } from "../service/servicePreceptor.js";
+import Preceptor from "../model/modelPreceptor.js";
+
+export const buscarPreceptor = async (req, res) => {
+  const { dni, correoElectronico } = req.query;
+  try {
+    const query = {};
+    if (dni) query.dni = dni;
+    if (correoElectronico) query.correoElectronico = correoElectronico;
+
+    const preceptor = await Preceptor.findOne(query);
+    if (!preceptor) {
+      return res.status(404).json({ mensaje: "Preceptor no encontrado" });
+    }
+
+    res.json(preceptor);
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error en el servidor" });
+  }
+};
 
 export const getsPreceptoresController = async (req, res) => {
     try {

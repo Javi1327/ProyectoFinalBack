@@ -4,6 +4,7 @@ import { postAlumnoController,putAlumnoController,putAlumnoAsistController,getAl
 const routerAlumno = express.Router();
 
 routerAlumno.get("/", getsAlumnosController)
+routerAlumno.get("/buscar", buscarAlumno);
 routerAlumno.get("/:id", getAlumnoController)
 routerAlumno.post("/", postAlumnoController)
 routerAlumno.put("/:id", (req, res) => {

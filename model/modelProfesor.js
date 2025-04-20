@@ -8,8 +8,8 @@ const ProfesorSchema = new mongoose.Schema({
     dni: { type: Number, required: true, unique: true },
     correoElectronico: { type: String, required: true },
     telefono: { type: Number },
-    materias: [{ type: String }], // Lista de materias que enseña
-    cursos: [{ type: String }], // Lista de cursos que enseña
+    materiasAsignadas: [{ type: String }], // Lista de materias que enseña
+    cursosAsignados: [{ type: String }], // Lista de cursos que enseña
     fechaContratacion: { type: Date,
         default: Date.now,
     },

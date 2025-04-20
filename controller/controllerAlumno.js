@@ -1,4 +1,23 @@
 import { getAlumno, getsAlumnos, postAlumno, putAlumno, deleteAlumno } from "../service/serviceAlumno.js";
+import Alumno from "../model/modelAlumno.js";
+
+export const buscarAlumno = async (req, res) => {
+  const { dni, correoElectronico } = req.query;
+  try {
+    const query = {};
+    if (dni) query.dni = dni;
+    if (correoElectronico) query.correoElectronico = correoElectronico;
+
+    const alumno = await Alumno.findOne(query);
+    if (!alumno) {
+      return res.status(404).json({ mensaje: "Alumno no encontrado" });
+    }
+
+    res.json(alumno);
+  } catch (error) {
+    res.status(500).json({ mensaje: "Error en el servidor" });
+  }
+};
 
 export const getsAlumnosController = async (req, res) => {
     try {
@@ -80,6 +99,7 @@ export const deleteAlumnoController = async (req, res) => {
         return res.status(500).json({ status: "error", message: "Error en el servidor", data: {} });
     }
 };
+
 
 
 export const putAlumnoAsistController = async (req, res) => {
