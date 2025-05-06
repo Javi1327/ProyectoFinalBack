@@ -1,6 +1,6 @@
 import { getAlumno, getsAlumnos, postAlumno, putAlumno, deleteAlumno } from "../service/serviceAlumno.js";
 import Alumno from "../model/modelAlumno.js";
-
+import Curso from "../model/modelCurso.js";
 export const buscarAlumno = async (req, res) => {
   const { dni, correoElectronico } = req.query;
   try {
@@ -53,8 +53,14 @@ export const postAlumnoController = async (req, res) => {
             return res.status(400).json({ status: "error", message: "Faltan datos obligatorios", data: {} });
         }
 
-        // Llamar a la función para crear el alumno
-        const alumnoCreado = await postAlumno(nombre, apellido, dni, grado, direccion, telefono, correoElectronico, fechaNacimiento, asistencia, materias);
+        // Buscar el curso por su nombre (grado)
+        const curso = await Curso.findOne({ nombre: grado });
+        if (!curso) {
+            return res.status(400).json({ status: "error", message: "Curso no encontrado", data: {} });
+        }
+
+        // Llamar a la función para crear el alumno y asignarle el _id del curso
+        const alumnoCreado = await postAlumno(nombre, apellido, dni, curso._id, direccion, telefono, correoElectronico, fechaNacimiento, asistencia, materias);
 
         return res.status(201).json({ status: "success", message: "Alumno creado", data: alumnoCreado });
 
@@ -64,12 +70,19 @@ export const postAlumnoController = async (req, res) => {
     }
 };
 
+
 export const putAlumnoController = async (req, res) => {
     try {
         const id = req.params.id;
         const { nombre, apellido, dni, grado, direccion, telefono, correoElectronico, fechaNacimiento, asistencia = [], materias = [] } = req.body;
 
-        let alumno = await putAlumno(id, nombre, apellido, dni, grado, direccion, telefono, correoElectronico, fechaNacimiento, asistencia, materias);
+        // Buscar el curso por su nombre (grado)
+        const curso = await Curso.findOne({ nombre: grado });
+        if (!curso) {
+            return res.status(400).json({ status: "error", message: "Curso no encontrado", data: {} });
+        }
+
+        let alumno = await putAlumno(id, nombre, apellido, dni, curso._id, direccion, telefono, correoElectronico, fechaNacimiento, asistencia, materias);
 
         if (alumno) {
             alumno = await getAlumno(id);
@@ -82,6 +95,7 @@ export const putAlumnoController = async (req, res) => {
         return res.status(500).json({ status: "error", message: "Error en el servidor", data: {} });
     }
 };
+
 
 export const deleteAlumnoController = async (req, res) => {
     try {
@@ -98,4 +112,3 @@ export const deleteAlumnoController = async (req, res) => {
         return res.status(500).json({ status: "error", message: "Error en el servidor", data: {} });
     }
 };
-

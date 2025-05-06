@@ -6,7 +6,8 @@ const materiaSchema = new mongoose.Schema({
     required: true,
   },
   cursos: [{
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Curso',  // Relacionamos directamente con la colección de cursos
     required: true,
   }],
   isHabilitado: {
@@ -18,4 +19,3 @@ const materiaSchema = new mongoose.Schema({
 const Materia = mongoose.model('Materia', materiaSchema);
 
 export default Materia;
-

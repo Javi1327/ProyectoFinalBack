@@ -10,4 +10,5 @@ routerAlumno.post("/", postAlumnoController)
 routerAlumno.put("/:id", putAlumnoController)
 routerAlumno.delete("/:id", deleteAlumnoController)
 
+
 export default routerAlumno;

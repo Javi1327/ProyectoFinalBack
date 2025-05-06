@@ -5,7 +5,7 @@ const AlumnoSchema = new mongoose.Schema({
     nombre: { type: String, required: true },
     apellido: { type: String, required: true },
     dni: { type: Number, required: true, unique: true },
-    grado: { type: String, required: true },
+    grado: { type: mongoose.Schema.Types.ObjectId, ref: "Curso", required: true },
     direccion: { type: String },
     telefono: { type: String },
     correoElectronico: { type: String },
