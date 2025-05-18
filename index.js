@@ -10,6 +10,7 @@ import routerMateria from "./router/routerMateria.js";
 import routerAdmin from "./router/routerAdmin.js";
 import routerCurso from "./router/routerCurso.js"
 import { crearCursosSiNoExisten } from "./utils/creacionCursos.js";
+import routerLoginUser from "./router/routerLoginUser.js";
 
 env.config();
 
@@ -33,6 +34,7 @@ app.use("/alumnos", routerAlumno);
 app.use("/materias", routerMateria);
 app.use("/admins", routerAdmin)
 app.use("/cursos",routerCurso)
+app.use("/login", routerLoginUser) // cambiar el auth por login en el front
 
 // Ruta protegida con authMiddleware
 app.use("/protected", authMiddleware, (req, res) => {
