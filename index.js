@@ -8,7 +8,7 @@ import routerProfesor from "./router/routerProfesor.js";
 import routerAlumno from "./router/routerAlumno.js";
 import routerMateria from "./router/routerMateria.js";
 import routerAdmin from "./router/routerAdmin.js";
-
+import routerLoginUser from "./router/routerLoginUser.js";
 
 env.config();
 
@@ -31,6 +31,7 @@ app.use("/profesores", routerProfesor);
 app.use("/alumnos", routerAlumno);
 app.use("/materias", routerMateria);
 app.use("/admins", routerAdmin)
+app.use("/login", routerLoginUser) // cambiar el auth por login en el front
 
 // Ruta protegida con authMiddleware
 app.use("/protected", authMiddleware, (req, res) => {
