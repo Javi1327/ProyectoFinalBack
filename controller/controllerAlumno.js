@@ -1,6 +1,7 @@
 import { getAlumno, getsAlumnos, postAlumno, putAlumno, deleteAlumno } from "../service/serviceAlumno.js";
 import Alumno from "../model/modelAlumno.js";
 import Curso from "../model/modelCurso.js";
+import mongoose from "mongoose";
 export const buscarAlumno = async (req, res) => {
   const { dni, correoElectronico } = req.query;
   try {
@@ -40,6 +41,7 @@ export const getAlumnoController = async (req, res) => {
         }
         return res.status(200).json({ status: "success", message: "Alumno obtenido", data: alumno });
     } catch (error) {
+        console.error("Error en getAlumnoController:", error);
         return res.status(500).json({ status: "error", message: "Error en el servidor", data: {} });
     }
 };
@@ -73,29 +75,93 @@ export const postAlumnoController = async (req, res) => {
 
 export const putAlumnoController = async (req, res) => {
     try {
+        console.log("Datos recibidos en req.body:", req.body);
         const id = req.params.id;
-        const { nombre, apellido, dni, grado, direccion, telefono, correoElectronico, fechaNacimiento, asistencia = [], materias = [] } = req.body;
+        const {
+            nombre,
+            apellido,
+            dni,
+            grado,
+            direccion,
+            telefono,
+            correoElectronico,
+            fechaNacimiento,
+            asistencia = [],
+            materiasAlumno = [] // cambiar acá
+        } = req.body;
 
-        // Buscar el curso por su nombre (grado)
-        const curso = await Curso.findOne({ nombre: grado });
+        // Buscar el curso por id
+        const curso = mongoose.Types.ObjectId.isValid(grado)
+            ? await Curso.findById(grado)
+            : null;
+
         if (!curso) {
-            return res.status(400).json({ status: "error", message: "Curso no encontrado", data: {} });
+            return res.status(400).json({
+                status: "error",
+                message: "Curso no encontrado",
+                data: {}
+            });
         }
 
-        let alumno = await putAlumno(id, nombre, apellido, dni, curso._id, direccion, telefono, correoElectronico, fechaNacimiento, asistencia, materias);
+        // Calcular promedio para cada materia
+        const materiasConPromedio = materiasAlumno.map(materia => {
+            if (materia.nota1 !== undefined && materia.nota2 !== undefined) {
+                return {
+                    ...materia,
+                    promedio: (materia.nota1 + materia.nota2) / 2
+                };
+            }
+            return materia;
+        });
 
-        if (alumno) {
-            alumno = await getAlumno(id);
-            return res.status(200).json({ status: "success", message: "Alumno actualizado", data: alumno });
+        // Actualizar alumno con datos y materias con promedio
+        const alumnoActualizado = await Alumno.findOneAndUpdate(
+            { _id: id },
+            {
+                nombre,
+                apellido,
+                dni,
+                grado: curso._id,
+                direccion,
+                telefono,
+                correoElectronico,
+                fechaNacimiento,
+                asistencia: Array.isArray(asistencia) ? asistencia : [],
+                materiasAlumno: Array.isArray(materiasConPromedio) ? materiasConPromedio : [],
+                isHabilitado: true
+            },
+            { new: true }
+        ).populate({
+            path: "grado",
+            select: "nombre"
+        }).populate({
+            path: "materiasAlumno.materia",
+            select: "nombre"
+        });
+
+        if (alumnoActualizado) {
+            return res.status(200).json({
+                status: "success",
+                message: "Alumno actualizado correctamente",
+                data: alumnoActualizado
+            });
         } else {
-            return res.status(400).json({ status: "error", message: "Alumno no actualizado", data: {} });
+            return res.status(400).json({
+                status: "error",
+                message: "No se pudo actualizar el alumno",
+                data: {}
+            });
         }
+
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({ status: "error", message: "Error en el servidor", data: {} });
+        console.error("Error en putAlumnoController:", error);
+        return res.status(500).json({
+            status: "error",
+            message: "Error en el servidor",
+            data: {}
+        });
     }
 };
-
 
 export const deleteAlumnoController = async (req, res) => {
     try {
@@ -175,4 +241,32 @@ export const putAlumnoAsistController = async (req, res) => {
         console.error("Error en el controlador:", error.message); // Imprime el mensaje de error
         return res.status(500).json({ status: "error", message: "Error en el servidor", data: {} });
     }
+};
+
+
+// Esta función se encarga de actualizar las notas de un alumno en una materia específica
+export const actualizarNotasMateria = async (req, res) => {
+  try {
+    const { idAlumno, idMateria } = req.params;
+    const { nota1, nota2 } = req.body;
+
+    const alumno = await Alumno.findById(idAlumno);
+    if (!alumno) return res.status(404).json({ message: "Alumno no encontrado" });
+
+    const materiaObj = alumno.materiasAlumno.find(m => m.materia.toString() === idMateria);
+    if (!materiaObj) return res.status(404).json({ message: "Materia no encontrada en alumno" });
+
+    if (nota1 !== undefined) materiaObj.nota1 = nota1;
+    if (nota2 !== undefined) materiaObj.nota2 = nota2;
+
+    // Calculamos promedio automático
+    materiaObj.promedio = ((materiaObj.nota1 || 0) + (materiaObj.nota2 || 0)) / 2;
+
+    await alumno.save();
+
+    res.json({ message: "Notas actualizadas", alumno });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error actualizando notas" });
+  }
 };

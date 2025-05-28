@@ -3,40 +3,6 @@ import express from 'express';
 import Curso from '../model/modelCurso.js';
 const routerCursos = express.Router();
 
-// Obtener cursos de un profesor
-routerCursos.get('/profesor/:profesorId', async (req, res) => {
-    try {
-        const cursos = await Curso.find({ profesores: req.params.profesorId })
-            .populate('alumnos', 'nombre apellido') // solo estos campos
-            .populate('profesores', 'nombre apellido');
-        res.status(200).json(cursos);
-    } catch (error) {
-        console.error('Error al obtener los cursos del profesor:', error);
-        res.status(500).json({ message: 'Error al obtener los cursos del profesor' });
-    }
-});
-
-routerCursos.get('/:cursoId/alumnos', async (req, res) => {
-    try {
-        const curso = await Curso.findById(req.params.cursoId)
-            .populate({
-                path: 'alumnos',
-                select: 'nombre apellido materiasAlumno',
-                populate: {
-                    path: 'materiasAlumno.materia',
-                    select: 'nombre' // si querés mostrar el nombre de la materia
-                }
-            });
-
-        if (!curso) return res.status(404).json({ message: 'Curso no encontrado' });
-
-        res.status(200).json(curso.alumnos);
-    } catch (error) {
-        console.error('Error al obtener los alumnos del curso:', error);
-        res.status(500).json({ message: 'Error al obtener los alumnos del curso' });
-    }
-});
-
 //Crear Cursos//
 routerCursos.post("/", async (req, res) => {
     try {
@@ -48,32 +14,71 @@ routerCursos.post("/", async (req, res) => {
     }
 });
 
-// Obtener todos los cursos
 routerCursos.get('/', async (req, res) => {
-    try {
-      const cursos = await Curso.find();
-      res.json(cursos);
-    } catch (err) {
-      res.status(500).json({ message: err.message });
-    }
-  });
+  try {
+    const cursos = await Curso.find()
+      .populate({
+        path: 'materias',
+        select: 'nombre _id'
+      })
+      .populate({
+        path: 'alumnos',
+        select: 'nombre apellido _id materiasAlumno',
+        populate: {
+          path: 'materiasAlumno.materia',
+          select: 'nombre'
+        }
+      })
+      .populate({
+        path: 'profesores',
+        select: 'nombre apellido _id'
+      });
 
-routerCursos.post('/cursos/multiples', async (req, res) => {
-    const { ids } = req.body;
-  
-    // Validación básica del body
-    if (!Array.isArray(ids) || ids.length === 0) {
-      return res.status(400).json({ message: 'Se debe proporcionar un array de IDs de cursos.' });
+    res.json(cursos);
+  } catch (err) {
+    console.error('Error al obtener los cursos:', err);
+    res.status(500).json({ message: 'Error al obtener los cursos' });
+  }
+});
+
+
+
+// Obtener los alumnos de un curso específico
+routerCursos.get('/:id/alumnos', async (req, res) => {
+  try {
+    const curso = await Curso.findById(req.params.id).populate({
+      path: 'alumnos',
+      select: 'nombre apellido _id'
+    });
+
+    if (!curso) {
+      return res.status(404).json({ mensaje: 'Curso no encontrado' });
     }
-  
-    try {
-      const cursos = await Curso.find({ _id: { $in: ids } });
-      res.json(cursos);
-    } catch (error) {
-      console.error('Error al obtener cursos:', error);
-      res.status(500).json({ message: 'Hubo un error al obtener los cursos.' });
+
+    res.json({ data: curso.alumnos });
+  } catch (error) {
+    console.error('Error al obtener alumnos del curso:', error);
+    res.status(500).json({ error: 'Error al obtener los alumnos del curso' });
+  }
+});
+
+
+routerCursos.get("/:id", async (req, res) => {
+  try {
+    const curso = await Curso.findById(req.params.id).populate("alumnos");
+
+    if (!curso) {
+      return res.status(404).json({ mensaje: "Curso no encontrado" });
     }
-  });
-  
+
+    res.json(curso);
+  } catch (error) {
+    console.error("Error al buscar curso:", error);
+    res.status(500).json({ error: "Error del servidor" });
+  }
+});
+
+
+
 export default routerCursos;
 

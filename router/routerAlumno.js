@@ -1,6 +1,6 @@
 import express from "express";
 
-import { postAlumnoController,putAlumnoController,putAlumnoAsistController,getAlumnoController,deleteAlumnoController,getsAlumnosController, buscarAlumno } from "../controller/controllerAlumno.js";
+import { postAlumnoController,putAlumnoController,putAlumnoAsistController,getAlumnoController,deleteAlumnoController,getsAlumnosController, buscarAlumno , actualizarNotasMateria} from "../controller/controllerAlumno.js";
 const routerAlumno = express.Router();
 
 routerAlumno.get("/", getsAlumnosController)
@@ -14,7 +14,12 @@ routerAlumno.put("/:id", (req, res) => {
       return putAlumnoController(req, res);
     }
   });
+routerAlumno.put('/:idAlumno/notas/:idMateria', actualizarNotasMateria);
 routerAlumno.delete("/:id", deleteAlumnoController)
+
+
+
+
 
 
 export default routerAlumno;
