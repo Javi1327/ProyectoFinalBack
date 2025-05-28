@@ -7,7 +7,7 @@ const ProfesorSchema = new mongoose.Schema({
     dni: { type: Number, required: true, unique: true },
     correoElectronico: { type: String, required: true },
     telefono: { type: Number },
-    materiasAsignadas: { type: mongoose.Schema.Types.ObjectId, ref: 'Materia' },
+    materiaAsignada: { type: mongoose.Schema.Types.ObjectId, ref: 'Materia' },
     cursosAsignados: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Curso' }],
     fechaContratacion: { type: Date, default: Date.now }
 });

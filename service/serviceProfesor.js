@@ -1,25 +1,24 @@
 import Profesor from "../model/modelProfesor.js";
-import crypto from "crypto";
 import Curso from "../model/modelCurso.js";
 
 export const getsProfesores = async () => {
-    return await Profesor.find({ isHabilitado: true });
+    return await Profesor.find({ isHabilitado: true }).populate("materiaAsignada").populate("cursosAsignados");
 };
 
 export const getProfesor = async (id) => {
-    return await Profesor.findOne({ id });
+    return await Profesor.findById(id).populate("materiaAsignada").populate("cursosAsignados");
 };
+
 
 export const postProfesor = async (nombre, apellido, dni, correoElectronico, telefono, materiaAsignada, cursosAsignados) => {
     try {
         const profesor = await Profesor.create({
-            id: crypto.randomUUID(),
             nombre,
             apellido,
             dni,
             correoElectronico,
             telefono,
-            materiasAsignadas: materiaAsignada,  // Ahora es un solo ID, no array
+            materiaAsignada,  // Ahora es un solo ID, no array
             cursosAsignados: Array.isArray(cursosAsignados) ? cursosAsignados : [cursosAsignados],
             isHabilitado: true,
         });
@@ -39,15 +38,15 @@ export const postProfesor = async (nombre, apellido, dni, correoElectronico, tel
 
 export const putProfesor = async (id, nombre, apellido, dni, correoElectronico, telefono, materiaAsignada, cursosAsignados) => {
     try {
-        const profesorActualizado = await Profesor.findOneAndUpdate(
-            { id },
+        const profesorActualizado = await Profesor.findByIdAndUpdate(
+            id,
             {
                 nombre,
                 apellido,
                 dni,
                 correoElectronico,
                 telefono,
-                materiasAsignadas: materiaAsignada,
+                materiaAsignada,
                 cursosAsignados: Array.isArray(cursosAsignados) ? cursosAsignados : [],
                 isHabilitado: true,
             },
@@ -58,7 +57,6 @@ export const putProfesor = async (id, nombre, apellido, dni, correoElectronico, 
             throw new Error("Profesor no encontrado para actualizar.");
         }
 
-        // Opcional: Actualizar la referencia en los cursos
         await Curso.updateMany(
             { profesores: profesorActualizado._id },
             { $pull: { profesores: profesorActualizado._id } }
@@ -76,9 +74,10 @@ export const putProfesor = async (id, nombre, apellido, dni, correoElectronico, 
 };
 
 export const deleteProfesor = async (id) => {
-    return await Profesor.findOneAndUpdate(
-        { id },
+    return await Profesor.findByIdAndUpdate(
+        id,
         { isHabilitado: false },
         { new: true }
     );
 };
+

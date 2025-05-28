@@ -33,16 +33,22 @@ export const getsProfesoresController = async (req, res) => {
 
 export const getProfesorController = async (req, res) => {
     try {
-        const id = req.params.id;
-        const profesor = await getProfesor(id);
+        const id = req.params.id.trim(); // Asegúrate de que no haya espacios en blanco
+        const profesor = await Profesor.findById(id)
+            .populate('materiaAsignada', 'nombreMateria')  // Cargar solo el campo 'nombre' de la materia
+            .populate('cursosAsignados', 'nombre'); // Cargar solo el campo 'nombre' de los cursos
+
         if (!profesor) {
             return res.status(400).json({ status: "error", message: "Profesor no encontrado", data: {} });
         }
         return res.status(200).json({ status: "success", message: "Profesor obtenido", data: profesor });
     } catch (error) {
+        console.error("Error en getProfesorController:", error);
         return res.status(500).json({ status: "error", message: "Error en el servidor", data: {} });
     }
 };
+
+
 
 export const postProfesorController = async (req, res) => {
     try {
