@@ -8,6 +8,8 @@ import routerProfesor from "./router/routerProfesor.js";
 import routerAlumno from "./router/routerAlumno.js";
 import routerMateria from "./router/routerMateria.js";
 import routerAdmin from "./router/routerAdmin.js";
+import routerCurso from "./router/routerCurso.js"
+import { crearCursosSiNoExisten } from "./utils/creacionCursos.js";
 import routerLoginUser from "./router/routerLoginUser.js";
 
 env.config();
@@ -31,6 +33,7 @@ app.use("/profesores", routerProfesor);
 app.use("/alumnos", routerAlumno);
 app.use("/materias", routerMateria);
 app.use("/admins", routerAdmin)
+app.use("/cursos",routerCurso)
 app.use("/login", routerLoginUser) // cambiar el auth por login en el front
 
 // Ruta protegida con authMiddleware
@@ -48,6 +51,7 @@ mongoose
   .connect(process.env.MONGO_URL)
   .then(() => {
     console.log("Conectado a MongoDB");
+    crearCursosSiNoExisten();
   })
   .catch((error) => {
     console.error("Error de conexión a MongoDB:", error);
