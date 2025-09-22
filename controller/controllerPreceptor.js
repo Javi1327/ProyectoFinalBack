@@ -83,9 +83,9 @@ export const postPreceptorController = async (req, res) => {
 export const putPreceptorController = async (req, res) => {
     try {
         const id = req.params.id;
-        const { nombre, apellido, dni } = req.body;
+        const { nombre, apellido, dni, correoElectronico, telefono } = req.body;
 
-        let preceptor = await putPreceptor(id, nombre, apellido, dni);
+        let preceptor = await putPreceptor(id, nombre, apellido, dni, correoElectronico, telefono);
 
         if (preceptor) {
             preceptor = await getPreceptor(id);

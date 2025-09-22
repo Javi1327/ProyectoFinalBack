@@ -99,9 +99,9 @@ export const putAlumno = async (
 
 
 // Borrado lógico del alumno
-export const deleteAlumno = async (id) => {
+export const deleteAlumno = async (_id) => {
     return await Alumno.findOneAndUpdate(
-        { _id: id },
+        { _id: _id },
         { isHabilitado: false },
         { new: true }
     );
