@@ -5,7 +5,8 @@ import mongoose from "mongoose";
 
 // Obtener todos los alumnos habilitados
 export const getsAlumnos = async () => {
-    return await Alumno.find({ isHabilitado: true });
+  const alumnos = await Alumno.find({ isHabilitado: true }).populate('grado', 'nombre');
+  return alumnos;
 };
 
 // Obtener alumno por ID con populate
