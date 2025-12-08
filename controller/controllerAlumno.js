@@ -48,30 +48,26 @@ export const getAlumnoController = async (req, res) => {
 
 export const postAlumnoController = async (req, res) => {
     try {
-        const { nombre, apellido, dni, grado, direccion, telefono, correoElectronico, fechaNacimiento, asistencia = [], materias = [] } = req.body;
-
+        const { nombre, apellido, dni, grado, direccion, telefono, correoElectronico, fechaNacimiento, asistencia = [] } = req.body;
         // Validar campos requeridos
         if (!nombre || !apellido || !dni || !grado || !direccion || !telefono || !fechaNacimiento) {
             return res.status(400).json({ status: "error", message: "Faltan datos obligatorios", data: {} });
         }
-
         // Buscar el curso por su nombre (grado)
-        const curso = await Curso.findOne({ nombre: grado });
+        const curso = await Curso.findOne({ nombre: grado }).populate('materias', '_id');
         if (!curso) {
             return res.status(400).json({ status: "error", message: "Curso no encontrado", data: {} });
         }
-
+        // Crear materiasAlumno basado en las materias del curso
+        const materiasAlumno = curso.materias.map(materiaId => ({ materia: materiaId._id }));
         // Llamar a la función para crear el alumno y asignarle el _id del curso
-        const alumnoCreado = await postAlumno(nombre, apellido, dni, curso._id, direccion, telefono, correoElectronico, fechaNacimiento, asistencia, materias);
-
+        const alumnoCreado = await postAlumno(nombre, apellido, dni, curso._id, direccion, telefono, correoElectronico, fechaNacimiento, asistencia, materiasAlumno);
         return res.status(201).json({ status: "success", message: "Alumno creado", data: alumnoCreado });
-
     } catch (error) {
         console.error("Error al crear el alumno:", error);
         return res.status(500).json({ status: "error", message: "Error en el servidor", data: {} });
     }
 };
-
 
 export const putAlumnoController = async (req, res) => {
     try {
@@ -245,25 +241,38 @@ export const putAlumnoAsistController = async (req, res) => {
 
 
 // Esta función se encarga de actualizar las notas de un alumno en una materia específica
+
 export const actualizarNotasMateria = async (req, res) => {
   try {
     const { idAlumno, idMateria } = req.params;
     const { nota1, nota2 } = req.body;
-
+    console.log("Params recibidos:", req.params);
+    console.log("Body recibido:", req.body);
+    // Validaciones básicas
+    if (nota1 !== undefined && (isNaN(nota1) || nota1 < 1 || nota1 > 10)) {
+      return res.status(400).json({ message: "nota1 debe ser un número entre 1 y 10" });
+    }
+    if (nota2 !== undefined && (isNaN(nota2) || nota2 < 1 || nota2 > 10)) {
+      return res.status(400).json({ message: "nota2 debe ser un número entre 1 y 10" });
+    }
     const alumno = await Alumno.findById(idAlumno);
+    console.log("Alumno encontrado:", !!alumno, "ID buscado:", idAlumno);
     if (!alumno) return res.status(404).json({ message: "Alumno no encontrado" });
-
     const materiaObj = alumno.materiasAlumno.find(m => m.materia.toString() === idMateria);
+    console.log("Materia encontrada en alumno:", !!materiaObj, "ID buscado:", idMateria);
+    console.log("materiasAlumno del alumno:", alumno.materiasAlumno);
     if (!materiaObj) return res.status(404).json({ message: "Materia no encontrada en alumno" });
-
+    // Verificar si ya tiene notas (previene modificaciones desde "subir notas")
+    //if (materiaObj.nota1 !== undefined || materiaObj.nota2 !== undefined) {
+    //  return res.status(400).json({ message: "Este alumno ya tiene notas cargadas para esta materia. Usa el componente de modificación." });
+    //}
     if (nota1 !== undefined) materiaObj.nota1 = nota1;
     if (nota2 !== undefined) materiaObj.nota2 = nota2;
-
-    // Calculamos promedio automático
-    materiaObj.promedio = ((materiaObj.nota1 || 0) + (materiaObj.nota2 || 0)) / 2;
-
+    // Calcula promedio solo si ambas notas existen
+    if (materiaObj.nota1 !== undefined && materiaObj.nota2 !== undefined) {
+      materiaObj.promedio = (materiaObj.nota1 + materiaObj.nota2) / 2;
+    }
     await alumno.save();
-
     res.json({ message: "Notas actualizadas", alumno });
   } catch (error) {
     console.error(error);

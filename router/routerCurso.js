@@ -48,13 +48,15 @@ routerCursos.get('/:id/alumnos', async (req, res) => {
   try {
     const curso = await Curso.findById(req.params.id).populate({
       path: 'alumnos',
-      select: 'nombre apellido _id'
+      select: 'nombre apellido _id materiasAlumno',  // AGREGADO: incluir materiasAlumno
+      populate: {
+        path: 'materiasAlumno.materia',  // AGREGADO: populate anidado para obtener datos de la materia
+        select: 'nombre'
+      }
     });
-
     if (!curso) {
       return res.status(404).json({ mensaje: 'Curso no encontrado' });
     }
-
     res.json({ data: curso.alumnos });
   } catch (error) {
     console.error('Error al obtener alumnos del curso:', error);
