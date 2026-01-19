@@ -1,6 +1,7 @@
+import 'dotenv/config';
 import express from "express";
 import cors from "cors"; // npm i cors
-import env from "dotenv"; // npm i dotenv
+//import env from "dotenv"; // npm i dotenv
 import mongoose from "mongoose"; // npm i mongoose
 import { authMiddleware } from "./middleware/authmiddleware.js";
 import routerPreceptor from "./router/routerPreceptor.js";
@@ -12,7 +13,12 @@ import routerCurso from "./router/routerCurso.js"
 import { crearCursosSiNoExisten } from "./utils/creacionCursos.js";
 import routerLoginUser from "./router/routerLoginUser.js";
 
-env.config();
+
+//console.log('Variables de entorno cargadas:');
+//console.log('JWT_ACCESS_SECRET:', process.env.JWT_ACCESS_SECRET);
+//console.log('JWT_REFRESH_SECRET:', process.env.JWT_REFRESH_SECRET);
+
+//env.config();
 
 const PORT = process.env.PORT || 3000;
 
@@ -34,7 +40,7 @@ app.use("/alumnos", routerAlumno);
 app.use("/materias", routerMateria);
 app.use("/admins", routerAdmin)
 app.use("/cursos",routerCurso)
-app.use("/login", routerLoginUser) // cambiar el auth por login en el front
+app.use("/login", routerLoginUser) 
 
 // Ruta protegida con authMiddleware
 app.use("/protected", authMiddleware, (req, res) => {

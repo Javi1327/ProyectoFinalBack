@@ -11,6 +11,7 @@ const AlumnoSchema = new mongoose.Schema({
     correoElectronico: { type: String },
     fechaNacimiento: { type: Date },
     asistencia: [{ fecha: { type: Date }, presente: { type: Boolean } }],
+    password: { type: String },
     materiasAlumno: [{
         materia: { type: mongoose.Schema.Types.ObjectId, ref: "Materia" },
         //materia: { type: String },

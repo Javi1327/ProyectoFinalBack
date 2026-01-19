@@ -8,6 +8,7 @@ const AdminSchema = new mongoose.Schema({
   dni: { type: Number, required: true, unique: true },
   correoElectronico: { type: String, required: true },
   telefono: { type: Number },
+  password: { type: String },
 });
 
 const Admin = mongoose.model('Admin', AdminSchema);

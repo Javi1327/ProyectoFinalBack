@@ -8,6 +8,7 @@ const PreceptorSchema = new mongoose.Schema({
     dni: { type: Number, required: true, unique: true },
     correoElectronico: { type: String, required: true },
     telefono: { type: Number },
+    password: { type: String },
 });
 
 const Preceptor = mongoose.model('Preceptor', PreceptorSchema);

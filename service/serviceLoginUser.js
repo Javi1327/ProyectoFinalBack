@@ -51,8 +51,13 @@ export const Login = async (username, password) => {
       if (!validPassword) return -1;
     }
 
+//const accesstoken = generateAccessToken({ nombre: user.nombre, dni: user.dni, id: user._id, role });
+  //  const refreshtoken = generateRefreshToken({ nombre: user.nombre, dni: user.dni, id: user._id, role });
     const accesstoken = generateAccessToken({ nombre: user.nombre, dni: user.dni, id: user._id, role });
+   // console.log('Generando access token con secreto:', process.env.JWT_ACCESS_SECRET);  // Agrega esto
+  //  console.log('Access token generado:', accesstoken.substring(0, 50) + '...');  // Muestra parte del token
     const refreshtoken = generateRefreshToken({ nombre: user.nombre, dni: user.dni, id: user._id, role });
+  //  console.log('Refresh token generado con secreto:', process.env.JWT_REFRESH_SECRET);  // Agrega esto
     return { accesstoken, refreshtoken, role, id: user._id, nombre: user.nombre, dni: user.dni };
   } catch (error) {
     console.log(error);
