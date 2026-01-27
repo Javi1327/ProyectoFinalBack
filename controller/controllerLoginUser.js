@@ -28,7 +28,7 @@ const authenticateToken = (req, res, next) => {
 
 // Controlador para login único
 export const LoginController = async (req, res) => {
-  console.log('Petición de login recibida:', req.body);  // Agrega esto
+  //console.log('Petición de login recibida:', req.body);  // Agrega esto
   try {
     const { username, password } = req.body;
     const result = await Login(username, password);

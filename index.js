@@ -33,6 +33,10 @@ app.use(
   })
 );
 
+// Esto le da "permiso" al servidor para recibir historiales largos si fuera necesario
+app.use(express.json({ limit: '10mb' })); 
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
 // Rutas
 app.use("/preceptores", routerPreceptor);
 app.use("/profesores", routerProfesor);

@@ -2,6 +2,8 @@ import { getAlumno, getsAlumnos, postAlumno, putAlumno, deleteAlumno } from "../
 import Alumno from "../model/modelAlumno.js";
 import Curso from "../model/modelCurso.js";
 import mongoose from "mongoose";
+
+
 export const buscarAlumno = async (req, res) => {
   const { dni, correoElectronico } = req.query;
   try {
@@ -48,9 +50,9 @@ export const getAlumnoController = async (req, res) => {
 
 export const postAlumnoController = async (req, res) => {
     try {
-        const { nombre, apellido, dni, grado, direccion, telefono, correoElectronico, fechaNacimiento, asistencia = [] } = req.body;
+        const { nombre, apellido, dni, grado, direccion, telefono, correoElectronico, fechaNacimiento, asistencia, correoPadre, correoMadre, telefonoPadre, telefonoMadre } = req.body;
         // Validar campos requeridos
-        if (!nombre || !apellido || !dni || !grado || !direccion || !telefono || !fechaNacimiento) {
+        if (!nombre || !apellido || !dni || !grado || !direccion || !telefono || !fechaNacimiento || !correoPadre || !correoMadre || !telefonoPadre || !telefonoMadre) {
             return res.status(400).json({ status: "error", message: "Faltan datos obligatorios", data: {} });
         }
         // Buscar el curso por su nombre (grado)

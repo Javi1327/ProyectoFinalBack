@@ -12,6 +12,10 @@ const AlumnoSchema = new mongoose.Schema({
     fechaNacimiento: { type: Date },
     asistencia: [{ fecha: { type: Date }, presente: { type: Boolean } }],
     password: { type: String },
+    correoPadre: { type: String },
+    correoMadre: { type: String },
+    telefonoPadre: { type: String },
+    telefonoMadre: { type: String  },
     materiasAlumno: [{
         materia: { type: mongoose.Schema.Types.ObjectId, ref: "Materia" },
         //materia: { type: String },
