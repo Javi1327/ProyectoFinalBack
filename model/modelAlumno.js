@@ -10,7 +10,10 @@ const AlumnoSchema = new mongoose.Schema({
     telefono: { type: String },
     correoElectronico: { type: String },
     fechaNacimiento: { type: Date },
-    asistencia: [{ fecha: { type: Date }, presente: { type: Boolean } }],
+    asistencia: [{
+    fecha: { type: String, required: true },  // Cambia a String para coincidir con el frontend
+    presente: { type: Boolean, required: true }
+   }],
     password: { type: String },
     correoPadre: { type: String },
     correoMadre: { type: String },

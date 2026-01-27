@@ -71,95 +71,95 @@ export const postAlumnoController = async (req, res) => {
     }
 };
 
+ 
 export const putAlumnoController = async (req, res) => {
-    try {
-        console.log("Datos recibidos en req.body:", req.body);
-        const id = req.params.id;
-        const {
-            nombre,
-            apellido,
-            dni,
-            grado,
-            direccion,
-            telefono,
-            correoElectronico,
-            fechaNacimiento,
-            asistencia = [],
-            materiasAlumno = [] // cambiar acá
-        } = req.body;
+  try {
+    console.log("Datos recibidos en req.body:", req.body);
+    const id = req.params.id;
+    const {
+      nombre,
+      apellido,
+      dni,
+      grado,
+      direccion,
+      telefono,
+      correoElectronico,
+      fechaNacimiento,
+      asistencia = [],
+      materiasAlumno = []
+    } = req.body;
 
-        // Buscar el curso por id
-        const curso = mongoose.Types.ObjectId.isValid(grado)
-            ? await Curso.findById(grado)
-            : null;
+    const curso = mongoose.Types.ObjectId.isValid(grado)
+      ? await Curso.findById(grado)
+      : null;
 
-        if (!curso) {
-            return res.status(400).json({
-                status: "error",
-                message: "Curso no encontrado",
-                data: {}
-            });
-        }
-
-        // Calcular promedio para cada materia
-        const materiasConPromedio = materiasAlumno.map(materia => {
-            if (materia.nota1 !== undefined && materia.nota2 !== undefined) {
-                return {
-                    ...materia,
-                    promedio: (materia.nota1 + materia.nota2) / 2
-                };
-            }
-            return materia;
-        });
-
-        // Actualizar alumno con datos y materias con promedio
-        const alumnoActualizado = await Alumno.findOneAndUpdate(
-            { _id: id },
-            {
-                nombre,
-                apellido,
-                dni,
-                grado: curso._id,
-                direccion,
-                telefono,
-                correoElectronico,
-                fechaNacimiento,
-                asistencia: Array.isArray(asistencia) ? asistencia : [],
-                materiasAlumno: Array.isArray(materiasConPromedio) ? materiasConPromedio : [],
-                isHabilitado: true
-            },
-            { new: true }
-        ).populate({
-            path: "grado",
-            select: "nombre"
-        }).populate({
-            path: "materiasAlumno.materia",
-            select: "nombre"
-        });
-
-        if (alumnoActualizado) {
-            return res.status(200).json({
-                status: "success",
-                message: "Alumno actualizado correctamente",
-                data: alumnoActualizado
-            });
-        } else {
-            return res.status(400).json({
-                status: "error",
-                message: "No se pudo actualizar el alumno",
-                data: {}
-            });
-        }
-
-    } catch (error) {
-        console.error("Error en putAlumnoController:", error);
-        return res.status(500).json({
-            status: "error",
-            message: "Error en el servidor",
-            data: {}
-        });
+    if (!curso) {
+      return res.status(400).json({
+        status: "error",
+        message: "Curso no encontrado",
+        data: {}
+      });
     }
+
+    // Calcular promedio para cada materia (corregido el error de sintaxis)
+    const materiasConPromedio = materiasAlumno.map(materia => {
+      if (materia.nota1 !== undefined && materia.nota2 !== undefined) {  // Corregido: !== undefined &&
+        return {
+          ...materia,
+          promedio: (materia.nota1 + materia.nota2) / 2
+        };
+      }
+      return materia;
+    });
+
+    const alumnoActualizado = await Alumno.findOneAndUpdate(
+      { _id: id },
+      {
+        nombre,
+        apellido,
+        dni,
+        grado: curso._id,
+        direccion,
+        telefono,
+        correoElectronico,
+        fechaNacimiento,
+        asistencia: Array.isArray(asistencia) ? asistencia : [],
+        materiasAlumno: Array.isArray(materiasConPromedio) ? materiasConPromedio : [],
+        isHabilitado: true
+      },
+      { new: true }
+    ).populate({
+      path: "grado",
+      select: "nombre"
+    }).populate({
+      path: "materiasAlumno.materia",
+      select: "nombre"
+    });
+
+    if (alumnoActualizado) {
+      return res.status(200).json({
+        status: "success",
+        message: "Alumno actualizado correctamente",
+        data: alumnoActualizado
+      });
+    } else {
+      return res.status(400).json({
+        status: "error",
+        message: "No se pudo actualizar el alumno",
+        data: {}
+      });
+    }
+  } catch (error) {
+    console.error("Error en putAlumnoController:", error);
+    return res.status(500).json({
+      status: "error",
+      message: "Error en el servidor",
+      data: {}
+    });
+  }
 };
+
+
 
 export const deleteAlumnoController = async (req, res) => {
     try {
@@ -177,69 +177,48 @@ export const deleteAlumnoController = async (req, res) => {
     }
 };
 
+
 export const putAlumnoAsistController = async (req, res) => {
-    try {
-        const id = req.params.id;   
-        const { asistencia } = req.body; // Solo desestructuramos asistencia
-        console.log("Datos recibidos:", req.body);
+  try {
+    const id = req.params.id;
+    const { asistencia } = req.body;
+    console.log("Datos recibidos:", req.body);
 
-        // Aquí puedes obtener el alumno actual para no perder los demás datos
-        //console.log("ID del alumno a buscar:", id);
-        let alumno = await getAlumno(id);
-        //console.log("Alumno encontrado:", alumno);
-
-        if (!alumno) {
-            return res.status(404).json({ status: "error", message: "Alumno no encontrado", data: {} });
-        }
-
-        // Actualiza solo el campo de asistencia
-        if (asistencia && Array.isArray(asistencia)) {
-            asistencia.forEach(({ fecha, presente }) => {
-                if (!fecha) {
-                    console.error("Fecha no definida:", fecha);
-                    return; // Salta esta iteración si la fecha no está definida
-                }
-
-                const fechaFormateada = new Date(fecha);
-                if (isNaN(fechaFormateada.getTime())) {
-                    console.error("Fecha no válida:", fecha);
-                    return; // Salta esta iteración si la fecha no es válida
-                }
-
-                const fechaISO = fechaFormateada.toISOString().split("T")[0]; // Formato YYYY-MM-DD
-
-                // Verifica si ya existe la fecha en la asistencia
-                const index = alumno.asistencia.findIndex(item => item.fecha === fechaISO);
-                
-                if (presente) {
-                    // Si está presente, agrega o actualiza la fecha
-                    if (index === -1) {
-                        alumno.asistencia.push({ fecha: fechaISO, presente: true });
-                    } else {
-                        alumno.asistencia[index].presente = true; // Actualiza el estado a presente
-                    }
-                } else {
-                    // Si está ausente, elimina la fecha (si existe)
-                    if (index > -1) {
-                        alumno.asistencia.splice(index, 1); // Elimina la entrada de asistencia
-                    }
-                }
-            });
-        }
-
-        // Guarda el alumno actualizado
-        alumno = await putAlumno(id, alumno.nombre, alumno.apellido, alumno.dni, alumno.grado, alumno.direccion, alumno.telefono, alumno.correoElectronico, alumno.fechaNacimiento, alumno.asistencia, alumno.materias);
-        //console.log("Alumno actualizado:", alumno);
-        if (alumno) {
-            return res.status(200).json({ status: "success", message: "Asistencia actualizada", data: alumno });
-        } else {
-            return res.status(400).json({ status: "error", message: "Asistencia no actualizada", data: {} });
-        }
-    } catch (error) {
-        console.error("Error en el controlador:", error.message); // Imprime el mensaje de error
-        return res.status(500).json({ status: "error", message: "Error en el servidor", data: {} });
+    let alumno = await Alumno.findById(id);
+    if (!alumno) {
+      return res.status(404).json({ status: "error", message: "Alumno no encontrado", data: {} });
     }
+
+    if (asistencia && Array.isArray(asistencia)) {
+      // Filtrar para mantener solo la ÚLTIMA entrada por fecha (sobrescribe duplicados)
+      const uniqueAsistencia = [];
+      const seenFechas = new Set();
+      asistencia.reverse().forEach(reg => {
+        if (!seenFechas.has(reg.fecha)) {
+          uniqueAsistencia.unshift(reg);
+          seenFechas.add(reg.fecha);
+        }
+      });
+
+      console.log("Asistencia filtrada (única por fecha):", uniqueAsistencia);
+      alumno.asistencia = uniqueAsistencia;
+    }
+
+    // Guarda el alumno actualizado
+    const alumnoActualizado = await alumno.save();
+    if (alumnoActualizado) {
+      console.log("Guardado exitosamente:", alumnoActualizado.asistencia);
+      return res.status(200).json({ status: "success", message: "Asistencia actualizada", data: alumnoActualizado });
+    } else {
+      return res.status(400).json({ status: "error", message: "Asistencia no actualizada", data: {} });
+    }
+  } catch (error) {
+    console.error("Error en el controlador:", error.message);
+    return res.status(500).json({ status: "error", message: "Error en el servidor", data: {} });
+  }
 };
+
+
 
 
 // Esta función se encarga de actualizar las notas de un alumno en una materia específica
