@@ -1,17 +1,39 @@
 import { getMateria, getsMaterias, postMateria, putMateria, deleteMateria } from "../service/serviceMateria.js";
+//import Materia from "../models/Materia.js"; // Para populate
+import Materia from "../model/modelMateria.js";
 
-// Obtener todas las materias
-// Obtener todas las materias
+
+// Obtener todas las materias con los nombres de profesor y cursos
 export const getsMateriasController = async (req, res) => {
-    try {
-      const materias = await getsMaterias(); // Usamos el servicio para obtener las materias habilitadas
-      res.status(200).json(materias);
-    } catch (error) {
-      console.error('Error al obtener las materias:', error);
-      res.status(500).json({ message: 'Error al obtener las materias' });
+  try {
+    const { cursoId } = req.query;
+    let materias = await getsMaterias();  // Asume que getsMaterias() devuelve las materias habilitadas
+
+    if (cursoId) {
+      materias = materias.filter(materia => materia.cursos && materia.cursos.includes(cursoId));
     }
-  };
-  
+
+    // Populate para cursos y horarios.profesor (ahora funciona con el esquema actualizado)
+    const populatedMaterias = await Materia.populate(materias, [
+      { path: 'cursos', select: 'nombre' },
+      { path: 'horarios.profesor', select: 'nombre apellido' }  // Ahora poblable
+    ]);
+
+    // Formatear profesor
+    const formattedMaterias = populatedMaterias.map(materia => ({
+      ...materia.toObject(),
+      horarios: materia.horarios ? materia.horarios.map(h => ({  // Verificación adicional
+        ...h,
+        profesor: h.profesor ? `${h.profesor.nombre} ${h.profesor.apellido}` : 'Sin asignar'
+      })) : []  // Si horarios es null, usa array vacío
+    }));
+
+    res.status(200).json(formattedMaterias);
+  } catch (error) {
+    console.error('Error al obtener las materias:', error);
+    res.status(500).json({ message: 'Error al obtener las materias' });
+  }
+};
 
 // Obtener una materia por ID
 export const getMateriaController = async (req, res) => {
@@ -32,10 +54,15 @@ export const getMateriaController = async (req, res) => {
 
 export const postMateriaController = async (req, res) => {
     try {
-        const { nombreMateria, cursos } = req.body;
+        const { nombreMateria, cursos, horarios } = req.body;  // Agrega horarios
 
-        // Llamamos al servicio para crear la materia sin validación de existencia
-        const materia = await postMateria(nombreMateria, cursos);
+        // Validación básica
+        if (!nombreMateria || !cursos || cursos.length === 0) {
+            return res.status(400).json({ status: "error", message: "Faltan datos: nombreMateria y cursos son requeridos", data: {} });
+        }
+
+        // Llamamos al servicio para crear la materia
+        const materia = await postMateria(nombreMateria, cursos, horarios);  // Pasa horarios al servicio
 
         res.status(201).json({
             status: "success",
@@ -55,13 +82,13 @@ export const postMateriaController = async (req, res) => {
 export const putMateriaController = async (req, res) => {
     try {
         const id = req.params.id;
-        const { nombreMateria, cursos } = req.body; // CAMBIO AQUI: cursos (plural)
+        const { nombreMateria, cursos, horarios } = req.body;  // Agrega horarios
 
         if (!nombreMateria || !cursos || cursos.length === 0) {
-            return res.status(400).json({ status: "error", message: "Faltan datos", data: {} });
+            return res.status(400).json({ status: "error", message: "Faltan datos: nombreMateria y cursos son requeridos", data: {} });
         }
 
-        let materia = await putMateria(id, nombreMateria, cursos);
+        let materia = await putMateria(id, nombreMateria, cursos, horarios);  // Pasa horarios al servicio
 
         if (materia) {
             materia = await getMateria(id); // Obtener la materia actualizada

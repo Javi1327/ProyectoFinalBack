@@ -1,4 +1,4 @@
-import Materia from "../model/modelMateria.js";
+ import Materia from "../model/modelMateria.js";
 import Curso from "../model/modelCurso.js"; // Asegúrate de importar el modelo de los cursos
 import crypto from "crypto";
 
@@ -15,12 +15,13 @@ export const getMateria = async (id) => {
 }
 
 // Crear una materia
-export const postMateria = async (nombreMateria, cursos) => {
+export const postMateria = async (nombreMateria, cursos, horarios = []) => {  // Agrega horarios como parámetro opcional
     try {
         // Crear una nueva materia sin verificar si el nombre ya existe
         const nuevaMateria = new Materia({
             nombreMateria,
-            cursos
+            cursos,
+            horarios  // Agrega horarios
         });
 
         // Guardar la materia en la base de datos
@@ -38,7 +39,7 @@ export const postMateria = async (nombreMateria, cursos) => {
     }
 };
 
-export const putMateria = async (id, nombreMateria, cursos) => {
+export const putMateria = async (id, nombreMateria, cursos, horarios = []) => {  // Agrega horarios como parámetro opcional
     try {
         // Verificación de parámetros
         if (!nombreMateria || !Array.isArray(cursos)) {
@@ -54,6 +55,7 @@ export const putMateria = async (id, nombreMateria, cursos) => {
         // Actualizar los campos de la materia
         materia.nombreMateria = nombreMateria;
         materia.cursos = cursos;
+        materia.horarios = horarios;  // Agrega actualización de horarios
 
         // Guardar la materia actualizada
         await materia.save();
