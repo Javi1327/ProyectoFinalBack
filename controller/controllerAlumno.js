@@ -1,4 +1,4 @@
-import { getAlumno, getsAlumnos, postAlumno, putAlumno, deleteAlumno } from "../service/serviceAlumno.js";
+import { getAlumno, getsAlumnos, postAlumno, putAlumno, deleteAlumno, deleteNotasMateria } from "../service/serviceAlumno.js";
 import Alumno from "../model/modelAlumno.js";
 import Curso from "../model/modelCurso.js";
 import mongoose from "mongoose";
@@ -103,7 +103,7 @@ export const putAlumnoController = async (req, res) => {
 
     // Calcular promedio para cada materia (corregido el error de sintaxis)
     const materiasConPromedio = materiasAlumno.map(materia => {
-      if (materia.nota1 !== undefined && materia.nota2 !== undefined) {  // Corregido: !== undefined &&
+      if (materia.nota1 !== undefined && materia.nota2 !== undefined) {  // Corregido: Agregado 'undefined' después de '!=='
         return {
           ...materia,
           promedio: (materia.nota1 + materia.nota2) / 2
@@ -158,7 +158,6 @@ export const putAlumnoController = async (req, res) => {
     });
   }
 };
-
 
 
 export const deleteAlumnoController = async (req, res) => {
@@ -223,40 +222,82 @@ export const putAlumnoAsistController = async (req, res) => {
 
 // Esta función se encarga de actualizar las notas de un alumno en una materia específica
 
+// Actualizado: Maneja recuperatorios y calcula promedio correctamente
 export const actualizarNotasMateria = async (req, res) => {
   try {
     const { idAlumno, idMateria } = req.params;
-    const { nota1, nota2 } = req.body;
+    const { nota1, nota2, notaRecuperatorio1, notaRecuperatorio2 } = req.body; // Agregado recuperatorios
     console.log("Params recibidos:", req.params);
     console.log("Body recibido:", req.body);
-    // Validaciones básicas
+
+    // Validaciones básicas (agregado para recuperatorios)
     if (nota1 !== undefined && (isNaN(nota1) || nota1 < 1 || nota1 > 10)) {
       return res.status(400).json({ message: "nota1 debe ser un número entre 1 y 10" });
     }
     if (nota2 !== undefined && (isNaN(nota2) || nota2 < 1 || nota2 > 10)) {
       return res.status(400).json({ message: "nota2 debe ser un número entre 1 y 10" });
     }
+    if (notaRecuperatorio1 !== undefined && (isNaN(notaRecuperatorio1) || notaRecuperatorio1 < 1 || notaRecuperatorio1 > 10)) {
+      return res.status(400).json({ message: "notaRecuperatorio1 debe ser un número entre 1 y 10" });
+    }
+    if (notaRecuperatorio2 !== undefined && (isNaN(notaRecuperatorio2) || notaRecuperatorio2 < 1 || notaRecuperatorio2 > 10)) {
+      return res.status(400).json({ message: "notaRecuperatorio2 debe ser un número entre 1 y 10" });
+    }
+
     const alumno = await Alumno.findById(idAlumno);
     console.log("Alumno encontrado:", !!alumno, "ID buscado:", idAlumno);
     if (!alumno) return res.status(404).json({ message: "Alumno no encontrado" });
+
     const materiaObj = alumno.materiasAlumno.find(m => m.materia.toString() === idMateria);
     console.log("Materia encontrada en alumno:", !!materiaObj, "ID buscado:", idMateria);
     console.log("materiasAlumno del alumno:", alumno.materiasAlumno);
     if (!materiaObj) return res.status(404).json({ message: "Materia no encontrada en alumno" });
-    // Verificar si ya tiene notas (previene modificaciones desde "subir notas")
-    //if (materiaObj.nota1 !== undefined || materiaObj.nota2 !== undefined) {
-    //  return res.status(400).json({ message: "Este alumno ya tiene notas cargadas para esta materia. Usa el componente de modificación." });
-    //}
+
+    // Actualizar notas y recuperatorios
     if (nota1 !== undefined) materiaObj.nota1 = nota1;
     if (nota2 !== undefined) materiaObj.nota2 = nota2;
-    // Calcula promedio solo si ambas notas existen
-    if (materiaObj.nota1 !== undefined && materiaObj.nota2 !== undefined) {
-      materiaObj.promedio = (materiaObj.nota1 + materiaObj.nota2) / 2;
+    if (notaRecuperatorio1 !== undefined) materiaObj.notaRecuperatorio1 = notaRecuperatorio1;
+    if (notaRecuperatorio2 !== undefined) materiaObj.notaRecuperatorio2 = notaRecuperatorio2;
+
+    // Calcular promedio considerando recuperatorios (igual que en el frontend)
+    const { nota1: n1, nota2: n2, notaRecuperatorio1: r1, notaRecuperatorio2: r2 } = materiaObj;
+    if (n1 !== undefined && n2 !== undefined) {
+      let notas = [n1, n2];
+      if (r1 !== undefined) {
+        // Reemplaza la nota más baja con recuperatorio1
+        const minIndex = notas[0] < notas[1] ? 0 : 1;
+        notas[minIndex] = r1;
+      }
+      if (r2 !== undefined) {
+        // Reemplaza la otra nota con recuperatorio2
+        const minIndex = notas[0] < notas[1] ? 0 : 1;
+        const otherIndex = 1 - minIndex;
+        notas[otherIndex] = r2;
+      }
+      materiaObj.promedio = ((notas[0] + notas[1]) / 2).toFixed(2); // Calcula y guarda
+    } else {
+      materiaObj.promedio = 'N/A';
     }
+
     await alumno.save();
     res.json({ message: "Notas actualizadas", alumno });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error actualizando notas" });
+  }
+};
+
+// Eliminar notas de una materia específica para un alumno
+export const deleteNotasMateriaController = async (req, res) => {
+  try {
+    const { idAlumno, idMateria } = req.params;
+    const alumnoActualizado = await deleteNotasMateria(idAlumno, idMateria);
+    if (!alumnoActualizado) {
+      return res.status(404).json({ message: "Alumno no encontrado" });
+    }
+    res.json({ message: "Notas eliminadas", alumno: alumnoActualizado });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error eliminando notas" });
   }
 };

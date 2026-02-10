@@ -107,3 +107,24 @@ export const deleteAlumno = async (_id) => {
         { new: true }
     );
 };
+
+// Limpiar notas de una materia específica para un alumno (remover campos de la DB)
+export const deleteNotasMateria = async (alumnoId, materiaId) => {
+  if (!mongoose.Types.ObjectId.isValid(alumnoId) || !mongoose.Types.ObjectId.isValid(materiaId)) {
+    throw new Error("ID de alumno o materia inválido");
+  }
+
+  return await Alumno.findOneAndUpdate(
+    { _id: alumnoId, "materiasAlumno.materia": materiaId },
+    {
+      $unset: {
+        "materiasAlumno.$.nota1": 1,
+        "materiasAlumno.$.nota2": 1,
+        "materiasAlumno.$.notaRecuperatorio1": 1,
+        "materiasAlumno.$.notaRecuperatorio2": 1,
+        "materiasAlumno.$.promedio": 1
+      }
+    },
+    { new: true }
+  );
+};
