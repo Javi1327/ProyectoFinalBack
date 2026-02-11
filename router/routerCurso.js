@@ -14,6 +14,28 @@ routerCursos.post("/", async (req, res) => {
     }
 });
 
+// Ruta para obtener cursos de un profesor específico
+routerCursos.get('/profeCursos', async (req, res) => {
+  try {
+    const profesorId = req.query.profesorId;
+    if (!profesorId) {
+      return res.status(400).json({ mensaje: 'ID del profesor requerido' });
+    }
+
+    // Agrega populate para alumnos
+    const cursos = await Curso.find({ profesores: profesorId }).populate('alumnos');
+
+    if (!cursos || cursos.length === 0) {
+      return res.status(404).json({ mensaje: 'No se encontraron cursos asignados para este profesor' });
+    }
+
+    res.json(cursos);
+  } catch (err) {
+    console.error('Error al obtener cursos del profesor:', err);
+    res.status(500).json({ message: 'Error al obtener los cursos del profesor' });
+  }
+});
+
 routerCursos.get('/', async (req, res) => {
   try {
     const cursos = await Curso.find()
@@ -80,7 +102,4 @@ routerCursos.get("/:id", async (req, res) => {
   }
 });
 
-
-
 export default routerCursos;
-

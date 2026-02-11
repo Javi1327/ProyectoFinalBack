@@ -86,7 +86,12 @@ export const putAlumnoController = async (req, res) => {
       correoElectronico,
       fechaNacimiento,
       asistencia = [],
-      materiasAlumno = []
+      materiasAlumno = [],
+      // Agregados: Nuevos campos de padres
+      correoPadre,
+      telefonoPadre,
+      correoMadre,
+      telefonoMadre
     } = req.body;
 
     const curso = mongoose.Types.ObjectId.isValid(grado)
@@ -125,7 +130,12 @@ export const putAlumnoController = async (req, res) => {
         fechaNacimiento,
         asistencia: Array.isArray(asistencia) ? asistencia : [],
         materiasAlumno: Array.isArray(materiasConPromedio) ? materiasConPromedio : [],
-        isHabilitado: true
+        isHabilitado: true,
+        // Agregados: Incluye los nuevos campos en la actualización
+        correoPadre,
+        telefonoPadre,
+        correoMadre,
+        telefonoMadre
       },
       { new: true }
     ).populate({
