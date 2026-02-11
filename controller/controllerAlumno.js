@@ -44,22 +44,28 @@ export const getAlumnoController = async (req, res) => {
   }
 };
 
+// En controllerAlumno.js, modifica postAlumnoController:
 export const postAlumnoController = async (req, res) => {
   try {
     const { nombre, apellido, dni, grado, direccion, telefono, correoElectronico, fechaNacimiento, asistencia, correoPadre, correoMadre, telefonoPadre, telefonoMadre } = req.body;
-    // Validar campos requeridos
+    // Validar campos requeridos (incluyendo padres)
     if (!nombre || !apellido || !dni || !grado || !direccion || !telefono || !fechaNacimiento || !correoPadre || !correoMadre || !telefonoPadre || !telefonoMadre) {
       return res.status(400).json({ status: "error", message: "Faltan datos obligatorios", data: {} });
     }
-    // Buscar el curso por su nombre (grado)
-    const curso = await Curso.findOne({ nombre: grado }).populate('materias', '_id');
+    // Buscar el curso: Si grado es ObjectId válido, busca por _id; sino, por nombre
+    let curso;
+    if (mongoose.Types.ObjectId.isValid(grado)) {
+      curso = await Curso.findById(grado).populate('materias', '_id');
+    } else {
+      curso = await Curso.findOne({ nombre: grado }).populate('materias', '_id');
+    }
     if (!curso) {
       return res.status(400).json({ status: "error", message: "Curso no encontrado", data: {} });
     }
     // Crear materiasAlumno basado en las materias del curso
     const materiasAlumno = curso.materias.map(materiaId => ({ materia: materiaId._id }));
     // Llamar a la función para crear el alumno y asignarle el _id del curso
-    const alumnoCreado = await postAlumno(nombre, apellido, dni, curso._id, direccion, telefono, correoElectronico, fechaNacimiento, asistencia, materiasAlumno);
+    const alumnoCreado = await postAlumno(nombre, apellido, dni, curso._id, direccion, telefono, correoElectronico, fechaNacimiento, asistencia, materiasAlumno, correoPadre, correoMadre, telefonoPadre, telefonoMadre);  // Agregados: parámetros de padres
     return res.status(201).json({ status: "success", message: "Alumno creado", data: alumnoCreado });
   } catch (error) {
     console.error("Error al crear el alumno:", error);

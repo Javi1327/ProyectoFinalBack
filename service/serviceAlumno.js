@@ -20,6 +20,7 @@ export const getAlumno = async (id) => {
 
 
 // Crear un nuevo alumno y asociarlo a un curso
+// En serviceAlumno.js, modifica postAlumno:
 export const postAlumno = async (
     nombre,
     apellido,
@@ -30,11 +31,14 @@ export const postAlumno = async (
     correoElectronico,
     fechaNacimiento,
     asistencia,
-    materiasAlumno
+    materiasAlumno,
+    correoPadre,  // Agregado
+    correoMadre,  // Agregado
+    telefonoPadre,  // Agregado
+    telefonoMadre   // Agregado
 ) => {
     try {
         const alumno = await Alumno.create({
-            id: crypto.randomUUID(),
             nombre,
             apellido,
             dni,
@@ -45,7 +49,11 @@ export const postAlumno = async (
             fechaNacimiento,
             asistencia: Array.isArray(asistencia) ? asistencia : [],
             materiasAlumno: Array.isArray(materiasAlumno) ? materiasAlumno : [],
-            isHabilitado: true
+            isHabilitado: true,
+            correoPadre,  // Agregado
+            correoMadre,  // Agregado
+            telefonoPadre,  // Agregado
+            telefonoMadre   // Agregado
         });
 
         await Curso.findByIdAndUpdate(grado, {
