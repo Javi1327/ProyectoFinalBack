@@ -21,7 +21,8 @@ export const buscarProfesor = async (req, res) => {
 
 export const getsProfesoresController = async (req, res) => {
     try {
-        const profesores = await getsProfesores();
+        // Cambiado: Filtrar profesores "eliminados" (isHabilitado: false) directamente en la consulta
+        const profesores = await Profesor.find({ isHabilitado: { $ne: false } });
         if (profesores.length === 0) {
             return res.status(400).json({ status: "error", message: "Profesores no encontrados", data: {} });
         }
@@ -47,8 +48,6 @@ export const getProfesorController = async (req, res) => {
         return res.status(500).json({ status: "error", message: "Error en el servidor", data: {} });
     }
 };
-
-
 
 export const postProfesorController = async (req, res) => {
     try {
@@ -90,6 +89,18 @@ export const postProfesorController = async (req, res) => {
 export const putProfesorController = async (req, res) => {
     try {
         const id = req.params.id;
+        const updateData = req.body;
+
+        // Lógica para borrado lógico: Si solo se envía 'isHabilitado: false', actualiza solo ese campo
+        if (updateData.isHabilitado === false && Object.keys(updateData).length === 1) {
+            const updatedUser = await Profesor.findByIdAndUpdate(id, { isHabilitado: false }, { new: true });
+            if (!updatedUser) {
+                return res.status(404).json({ status: "error", message: "Profesor no encontrado", data: {} });
+            }
+            return res.status(200).json({ status: "success", message: "Profesor eliminado lógicamente", data: updatedUser });
+        }
+
+        // Lógica existente para otras actualizaciones
         const {
             nombre,
             apellido,
