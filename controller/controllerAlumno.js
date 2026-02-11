@@ -3,7 +3,6 @@ import Alumno from "../model/modelAlumno.js";
 import Curso from "../model/modelCurso.js";
 import mongoose from "mongoose";
 
-
 export const buscarAlumno = async (req, res) => {
   const { dni, correoElectronico } = req.query;
   try {
@@ -23,59 +22,67 @@ export const buscarAlumno = async (req, res) => {
 };
 
 export const getsAlumnosController = async (req, res) => {
-    try {
-        const alumnos = await getsAlumnos();
-        if (alumnos.length === 0) { 
-            return res.status(400).json({ status: "error", message: "Alumnos no encontrados", data: {} });
-        }
-        return res.status(200).json({ status: "success", message: "Alumnos obtenidos", data: alumnos });
-    } catch (error) {
-        return res.status(500).json({ status: "error", message: "Error en el servidor", data: {} });
-    }
+  try {
+    const alumnos = await Alumno.find({ isHabilitado: { $ne: false } }); // Cambiado: Filtra "eliminados" (isHabilitado: false)
+    res.json({ status: 'success', message: 'Alumnos obtenidos', data: alumnos });
+  } catch (error) {
+    res.status(400).json({ error: 'Error al obtener alumnos' });
+  }
 };
 
 export const getAlumnoController = async (req, res) => {
-    try {
-        const id = req.params.id;
-        const alumno = await getAlumno(id);
-        if (!alumno) {
-            return res.status(400).json({ status: "error", message: "Alumno no encontrado", data: {} });
-        }
-        return res.status(200).json({ status: "success", message: "Alumno obtenido", data: alumno });
-    } catch (error) {
-        console.error("Error en getAlumnoController:", error);
-        return res.status(500).json({ status: "error", message: "Error en el servidor", data: {} });
+  try {
+    const id = req.params.id;
+    const alumno = await getAlumno(id);
+    if (!alumno) {
+      return res.status(400).json({ status: "error", message: "Alumno no encontrado", data: {} });
     }
+    return res.status(200).json({ status: "success", message: "Alumno obtenido", data: alumno });
+  } catch (error) {
+    console.error("Error en getAlumnoController:", error);
+    return res.status(500).json({ status: "error", message: "Error en el servidor", data: {} });
+  }
 };
 
 export const postAlumnoController = async (req, res) => {
-    try {
-        const { nombre, apellido, dni, grado, direccion, telefono, correoElectronico, fechaNacimiento, asistencia, correoPadre, correoMadre, telefonoPadre, telefonoMadre } = req.body;
-        // Validar campos requeridos
-        if (!nombre || !apellido || !dni || !grado || !direccion || !telefono || !fechaNacimiento || !correoPadre || !correoMadre || !telefonoPadre || !telefonoMadre) {
-            return res.status(400).json({ status: "error", message: "Faltan datos obligatorios", data: {} });
-        }
-        // Buscar el curso por su nombre (grado)
-        const curso = await Curso.findOne({ nombre: grado }).populate('materias', '_id');
-        if (!curso) {
-            return res.status(400).json({ status: "error", message: "Curso no encontrado", data: {} });
-        }
-        // Crear materiasAlumno basado en las materias del curso
-        const materiasAlumno = curso.materias.map(materiaId => ({ materia: materiaId._id }));
-        // Llamar a la función para crear el alumno y asignarle el _id del curso
-        const alumnoCreado = await postAlumno(nombre, apellido, dni, curso._id, direccion, telefono, correoElectronico, fechaNacimiento, asistencia, materiasAlumno);
-        return res.status(201).json({ status: "success", message: "Alumno creado", data: alumnoCreado });
-    } catch (error) {
-        console.error("Error al crear el alumno:", error);
-        return res.status(500).json({ status: "error", message: "Error en el servidor", data: {} });
+  try {
+    const { nombre, apellido, dni, grado, direccion, telefono, correoElectronico, fechaNacimiento, asistencia, correoPadre, correoMadre, telefonoPadre, telefonoMadre } = req.body;
+    // Validar campos requeridos
+    if (!nombre || !apellido || !dni || !grado || !direccion || !telefono || !fechaNacimiento || !correoPadre || !correoMadre || !telefonoPadre || !telefonoMadre) {
+      return res.status(400).json({ status: "error", message: "Faltan datos obligatorios", data: {} });
     }
+    // Buscar el curso por su nombre (grado)
+    const curso = await Curso.findOne({ nombre: grado }).populate('materias', '_id');
+    if (!curso) {
+      return res.status(400).json({ status: "error", message: "Curso no encontrado", data: {} });
+    }
+    // Crear materiasAlumno basado en las materias del curso
+    const materiasAlumno = curso.materias.map(materiaId => ({ materia: materiaId._id }));
+    // Llamar a la función para crear el alumno y asignarle el _id del curso
+    const alumnoCreado = await postAlumno(nombre, apellido, dni, curso._id, direccion, telefono, correoElectronico, fechaNacimiento, asistencia, materiasAlumno);
+    return res.status(201).json({ status: "success", message: "Alumno creado", data: alumnoCreado });
+  } catch (error) {
+    console.error("Error al crear el alumno:", error);
+    return res.status(500).json({ status: "error", message: "Error en el servidor", data: {} });
+  }
 };
 
- 
 export const putAlumnoController = async (req, res) => {
   try {
     console.log("Datos recibidos en req.body:", req.body);
     const id = req.params.id;
+    const updateData = req.body;
+
+    // Lógica para borrado lógico: Si solo se envía 'isHabilitado: false', actualiza solo ese campo
+    if (updateData.isHabilitado === false && Object.keys(updateData).length === 1) {
+      const updatedUser = await Alumno.findByIdAndUpdate(id, { isHabilitado: false }, { new: true });
+      if (!updatedUser) {
+        return res.status(404).json({ status: "error", message: "Alumno no encontrado", data: {} });
+      }
+      return res.status(200).json({ status: "success", message: "Alumno eliminado lógicamente", data: updatedUser });
+    }
+
+    // Lógica existente para otras actualizaciones
     const {
       nombre,
       apellido,
@@ -159,23 +166,21 @@ export const putAlumnoController = async (req, res) => {
   }
 };
 
-
 export const deleteAlumnoController = async (req, res) => {
-    try {
-        const id = req.params.id;
-        const alumnoEliminado = await deleteAlumno(id);
+  try {
+    const id = req.params.id;
+    const alumnoEliminado = await deleteAlumno(id);
 
-        if (alumnoEliminado) {
-            return res.status(200).json({ status: "success", message: "Alumno eliminado", data: {} });
-        } else {
-            return res.status(400).json({ status: "error", message: "Alumno no eliminado", data: {} });
-        }
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ status: "error", message: "Error en el servidor", data: {} });
+    if (alumnoEliminado) {
+      return res.status(200).json({ status: "success", message: "Alumno eliminado", data: {} });
+    } else {
+      return res.status(400).json({ status: "error", message: "Alumno no eliminado", data: {} });
     }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ status: "error", message: "Error en el servidor", data: {} });
+  }
 };
-
 
 export const putAlumnoAsistController = async (req, res) => {
   try {
@@ -217,11 +222,7 @@ export const putAlumnoAsistController = async (req, res) => {
   }
 };
 
-
-
-
 // Esta función se encarga de actualizar las notas de un alumno en una materia específica
-
 // Actualizado: Maneja recuperatorios y calcula promedio correctamente
 export const actualizarNotasMateria = async (req, res) => {
   try {

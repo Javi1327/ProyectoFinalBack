@@ -1,26 +1,28 @@
-import {  getAdmin,  getsAdmins,  postAdmin, putAdmin,  deleteAdmin } from "../service/serviceAdmin.js";
+import { getAdmin, getsAdmins, postAdmin, putAdmin, deleteAdmin } from "../service/serviceAdmin.js";
 import Admin from "../model/modelAdmin.js";
+
 export const buscarAdmin = async (req, res) => {
     const { dni, correoElectronico } = req.query;
     try {
-      const query = {};
-      if (dni) query.dni = dni;
-      if (correoElectronico) query.correoElectronico = correoElectronico;
-  
-      const admin = await Admin.findOne(query);
-      if (!admin) {
-        return res.status(404).json({ mensaje: "Admin no encontrado" });
-      }
-  
-      res.json(admin);
+        const query = {};
+        if (dni) query.dni = dni;
+        if (correoElectronico) query.correoElectronico = correoElectronico;
+
+        const admin = await Admin.findOne(query);
+        if (!admin) {
+            return res.status(404).json({ mensaje: "Admin no encontrado" });
+        }
+
+        res.json(admin);
     } catch (error) {
-      res.status(500).json({ mensaje: "Error en el servidor" });
+        res.status(500).json({ mensaje: "Error en el servidor" });
     }
-  };
+};
 
 export const getsAdminsController = async (req, res) => {
     try {
-        const admins = await getsAdmins();
+        // Cambiado: Filtrar admins "eliminados" (isHabilitado: false) directamente en la consulta
+        const admins = await Admin.find({ isHabilitado: { $ne: false } });
         if (admins.length === 0) {
             return res.status(400).json({ status: "error", message: "Admins no encontrados", data: {} });
         }
@@ -65,6 +67,18 @@ export const postAdminController = async (req, res) => {
 export const putAdminController = async (req, res) => {
     try {
         const id = req.params.id;
+        const updateData = req.body;
+
+        // Lógica para borrado lógico: Si solo se envía 'isHabilitado: false', actualiza solo ese campo
+        if (updateData.isHabilitado === false && Object.keys(updateData).length === 1) {
+            const updatedUser = await Admin.findByIdAndUpdate(id, { isHabilitado: false }, { new: true });
+            if (!updatedUser) {
+                return res.status(404).json({ status: "error", message: "Admin no encontrado", data: {} });
+            }
+            return res.status(200).json({ status: "success", message: "Admin eliminado lógicamente", data: updatedUser });
+        }
+
+        // Lógica existente para otras actualizaciones
         const { nombre, apellido, dni, correoElectronico, telefono } = req.body;
 
         let admin = await putAdmin(id, nombre, apellido, dni, correoElectronico, telefono);

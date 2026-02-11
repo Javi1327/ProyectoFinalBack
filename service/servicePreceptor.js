@@ -4,11 +4,6 @@ import crypto from "crypto";
 export const getsPreceptores = async () => {
     return await Preceptor.find({ isHabilitado: true });
 };
-
-export const getPreceptor = async (id) => {
-    return await Preceptor.findOne({ id });
-};
-
 export const postPreceptor = async (data) => {
     const { nombre, apellido, dni, correoElectronico, telefono } = data;
 
@@ -24,17 +19,21 @@ export const postPreceptor = async (data) => {
 }
 
 export const putPreceptor = async (id, nombre, apellido, dni, correoElectronico, telefono) => {
-    return await Preceptor.findOneAndUpdate(
-        { id },
-        { nombre, apellido, dni, correoElectronico, telefono, isHabilitado: true }, // Nos aseguramos que siga habilitado
-        { new: true } // Para devolver el documento actualizado
+    return await Preceptor.findByIdAndUpdate(
+        id,  // Cambiar a findByIdAndUpdate para usar _id
+        { nombre, apellido, dni, correoElectronico, telefono, isHabilitado: true },
+        { new: true, runValidators: true }  // Agregar runValidators para validaciones
     );
 };
 
+export const getPreceptor = async (id) => {
+    return await Preceptor.findById(id);
+};
+
 export const deletePreceptor = async (id) => {
-    return await Preceptor.findOneAndUpdate(
-        { id },
+    return await Preceptor.findByIdAndUpdate(
+        id,
         { isHabilitado: false },
-        { new: true } // Para devolver el documento actualizado
+        { new: true }
     );
 };
