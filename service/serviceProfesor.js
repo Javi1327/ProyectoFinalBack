@@ -1,5 +1,7 @@
 import Profesor from "../model/modelProfesor.js";
 import Curso from "../model/modelCurso.js";
+import Materia from '../model/modelMateria.js';  // Asegúrate de que esté importada
+
 
 export const getsProfesores = async () => {
     return await Profesor.find({ isHabilitado: true }).populate("materiaAsignada").populate("cursosAsignados");
@@ -29,10 +31,25 @@ export const postProfesor = async (nombre, apellido, dni, correoElectronico, tel
             { $push: { profesores: profesor._id } }
         );
 
+        // NUEVO: Actualizar la materia asignada para asignar el profesor a horarios.profesor
+        if (materiaAsignada) {
+            // Verificar si la materia existe
+            const materiaExiste = await Materia.findById(materiaAsignada);
+            if (!materiaExiste) {
+                console.warn(`Materia con ID ${materiaAsignada} no encontrada. Saltando asignación.`);
+            } else {
+                await Materia.updateOne(
+                    { _id: materiaAsignada },
+                    { $set: { "horarios.$[].profesor": profesor._id } }
+                );
+                console.log(`Profesor asignado a materia ${materiaAsignada}`);
+            }
+        }
+
         return profesor;
     } catch (error) {
-        console.error("Error al crear el profesor o asignar cursos", error);
-        throw new Error("No se pudo crear el profesor o asignar cursos.");
+        console.error("Error al crear el profesor o asignar cursos/materia:", error);
+        throw new Error("No se pudo crear el profesor o asignar cursos/materia.");
     }
 };
 

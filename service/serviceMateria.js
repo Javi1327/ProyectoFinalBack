@@ -2,6 +2,18 @@
 import Curso from "../model/modelCurso.js"; // Asegúrate de importar el modelo de los cursos
 import crypto from "crypto";
 
+export const getMateriasByCurso = async (cursoId) => {
+    try {
+        const materias = await Materia.find({ cursos: cursoId, isHabilitado: true })  // Filtra por cursoId y habilitadas
+            .populate('horarios.profesor')  // Pobla los profesores para mostrar nombre y apellido
+            .populate('cursos');  // Opcional, si quieres detalles de cursos
+        return materias;
+    } catch (error) {
+        console.error('Error al obtener materias por curso:', error);
+        return [];
+    }
+};
+
 // Obtener todas las materias habilitadas
 export const getsMaterias = async () => {
     const materias = await Materia.find({ isHabilitado: true }); // Solo materias habilitadas
@@ -39,23 +51,33 @@ export const postMateria = async (nombreMateria, cursos, horarios = []) => {  //
     }
 };
 
-export const putMateria = async (id, nombreMateria, cursos, horarios = []) => {  // Agrega horarios como parámetro opcional
+export const putMateria = async (id, nombreMateria, cursos, horarios = []) => {  // Horarios como parámetro opcional
     try {
         // Verificación de parámetros
         if (!nombreMateria || !Array.isArray(cursos)) {
             throw new Error("Datos inválidos para la actualización");
         }
 
+        // NEW: Sanitize the horarios array to handle "Sin asignar" for profesor
+        // This prevents Mongoose casting errors by converting it to null
+        let sanitizedHorarios = horarios;  // Default to original if not an array
+        if (horarios && Array.isArray(horarios)) {
+            sanitizedHorarios = horarios.map(horario => ({
+                ...horario,
+                profesor: horario.profesor === "Sin asignar" ? null : horario.profesor
+            }));
+        }
+
         // Buscar la materia por su ID
         const materia = await Materia.findById(id);
         if (!materia) {
-            return null; // Si no se encuentra la materia
+            return null;  // Si no se encuentra la materia
         }
 
         // Actualizar los campos de la materia
         materia.nombreMateria = nombreMateria;
         materia.cursos = cursos;
-        materia.horarios = horarios;  // Agrega actualización de horarios
+        materia.horarios = sanitizedHorarios;  // Usa los horarios sanitizados
 
         // Guardar la materia actualizada
         await materia.save();
@@ -63,14 +85,14 @@ export const putMateria = async (id, nombreMateria, cursos, horarios = []) => { 
         // Actualizar los cursos que contienen esta materia
         for (const cursoId of cursos) {
             await Curso.findByIdAndUpdate(cursoId, {
-                $addToSet: { materias: materia._id } // Añadir la materia al array de materias del curso
+                $addToSet: { materias: materia._id }  // Añadir la materia al array de materias del curso
             });
         }
 
-        return materia; // Retornar la materia actualizada
+        return materia;  // Retornar la materia actualizada
     } catch (error) {
         console.error('Error al actualizar la materia:', error);
-        return null;
+        return null;  // Consider throwing the error instead for better error propagation
     }
 };
 
